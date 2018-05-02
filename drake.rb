@@ -1,5 +1,12 @@
 require "open3"
+require "pry"
 
+def run_fork(stdin, stdout, &block)
+  fork do
+    STDOUT.reopen(stdout)
+    stdin.each_line(&block)
+  end
+end
 
 def three_step
   writers = []
@@ -52,7 +59,9 @@ class Pipeline
     when Pipeline
       Pipeline.new(commands + other.commands)
     when Cmd
-      @commands << other
+      Pipeline.new(commands + [other])
+    when Crb
+      Pipeline.new(commands + [other])
     end
   end
 
@@ -72,13 +81,8 @@ class Pipeline
       out_read, out_write = IO.pipe
 
       cmd = commands.shift
-      puts "Spawn command with #{cmd.args.inspect}"
-      case cmd
-      when Cmd
-        pids << spawn(cmd.args.join(" "), in: in_read, in_read => in_read,
-                      out: out_write, out_write => out_write)
-      when Crb
-      end
+      puts "Spawn command: #{cmd}"
+      pids << cmd.run(in_read, out_write)
 
       in_read = out_read
       in_write = out_write
@@ -109,20 +113,14 @@ class Cmd
   end
 
   def run(stdin, stdout)
-    spawn(cmd.args.join(" "), in: stdin, stdin => stdin,
-          out: stdout, stdout => stdout)
-    # puts "** Run Command: `#{command}` **"
-    # Open3.popen3(command) do |stdin, stdout, stderr, wait|
-    #   puts "started sub pid: #{wait.pid}"
-    #   # puts stdin                                            # => nil
-    #   puts stdout.read
-    #   # puts stderr                                           # => nil
-    # end
+    spawn(args.join(" "), in: stdin, stdin => stdin, out: stdout, stdout => stdout)
   end
 
   def |(other)
     case other
     when Cmd
+      Pipeline.new([self, other])
+    when Crb
       Pipeline.new([self, other])
     when Pipeline
       Pipeline.new([self] + other.commands)
@@ -130,7 +128,7 @@ class Cmd
   end
 end
 
-def Crb
+class Crb
   def initialize(&block)
     @block = block
   end
@@ -146,8 +144,8 @@ def Crb
   end
 end
 
-c = Cmd['cat', '/usr/share/dict/words'] | Cmd['head'] #| Crb.new { |line| puts line }
-puts c
+c = Cmd['cat', '/usr/share/dict/words'] | Cmd['head'] | Crb.new { |line| puts "crb - #{line}" }
+puts "pipeline: #{c}"
 pids, out = c.run
 puts "Spawned pids: #{pids}"
 puts out.read
