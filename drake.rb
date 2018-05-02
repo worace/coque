@@ -1,49 +1,6 @@
 require "open3"
 require "pry"
 
-def run_fork(stdin, stdout, &block)
-  fork do
-    STDOUT.reopen(stdout)
-    stdin.each_line(&block)
-  end
-end
-
-def three_step
-  writers = []
-  a_in_read, a_in_write = IO.pipe
-  a_out_read, a_out_write = IO.pipe
-
-  a_unused = [a_out_write]
-
-  p1 = spawn('echo "a\nb\nc\nab\n"',
-             out: a_out_write,
-             a_out_write => a_out_write,
-             in: a_in_read,
-             a_in_read => a_in_read)
-
-  b_out_read, b_out_write = IO.pipe
-  b_unused = [b_out_write]
-
-  a_unused.each(&:close)
-  run_fork(a_out_read, b_out_write) { |l| puts "~~ - #{l}" }
-
-  c_out_read, c_out_write = IO.pipe
-  c_unused = [c_out_write]
-
-  p2 = spawn('grep a',
-             out: c_out_write,
-             c_out_write => c_out_write,
-             in: b_out_read,
-             b_out_read => b_out_read)
-  b_unused.each(&:close)
-
-  # Q: Why do we have to close these? do the spawned processes not close them?
-  c_unused.each(&:close)
-  puts c_out_read.read
-end
-
-three_step
-
 class Pipeline
   attr_reader :commands
   def initialize(commands = [])
