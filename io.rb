@@ -206,4 +206,10 @@ def three_step
   puts c_out_read.read
 end
 
-three_step
+# three_step
+
+def stdin_redirect
+  stdin = File.open("/usr/share/dict/words", "r")
+  spawn("head", in: stdin, stdin => stdin)
+end
+stdin_redirect
