@@ -22,9 +22,6 @@ class Pipeline
     end
   end
 
-  def combine
-  end
-
   def run
     commands = self.commands
     pids = []
@@ -46,7 +43,6 @@ class Pipeline
     end
     out_write.close
     [pids, out_read]
-    # Open3.pipeline(*commands.map(&:args))
   end
 end
 
@@ -98,11 +94,27 @@ class Crb
   end
 
   def |(other)
+    case other
+    when Cmd
+      Pipeline.new([self, other])
+    when Crb
+      Pipeline.new([self, other])
+    when Pipeline
+      Pipeline.new([self] + other.commands)
+    end
   end
 end
+
+# TODO
+# [ ] Stdin redirect ( < )
+# [ ] Stdout redirect ( > )
+# [ ] Stderr redirect ( > )
+# [ ] ENV setting
+# [ ] Chdir
+# [ ] Backgrounding
 
 c = Cmd['cat', '/usr/share/dict/words'] | Cmd['head'] | Crb.new { |line| puts "crb - #{line}" }
 puts "pipeline: #{c}"
 pids, out = c.run
 puts "Spawned pids: #{pids}"
-puts out.read
+out.each_line { |l| puts l }
