@@ -7,11 +7,11 @@ Gem::Specification.new do |spec|
   spec.name          = "sluice"
   spec.version       = Sluice::VERSION
   spec.authors       = ["Horace Williams"]
-  spec.email         = ["horace.d.williams@gmail.com"]
+  spec.email         = ["horace@worace.works"]
 
-  spec.summary       = %q{TODO: Write a short summary, because RubyGems requires one.}
-  spec.description   = %q{TODO: Write a longer description or delete this line.}
-  spec.homepage      = "TODO: Put your gem's website or public repo URL here."
+  spec.summary       = %q{Shell command utilities with easy integration with Ruby code.}
+  spec.description   = %q{Like plumbum...for Ruby...with native Ruby streaming interop.}
+  spec.homepage      = "http://github.com/worace/sluice"
   spec.license       = "MIT"
 
   # Prevent pushing this gem to RubyGems.org. To allow pushes either set the 'allowed_push_host'
@@ -31,6 +31,8 @@ Gem::Specification.new do |spec|
   spec.require_paths = ["lib"]
 
   spec.add_development_dependency "bundler", "~> 1.16"
-  spec.add_development_dependency "rake", "~> 10.0"
-  spec.add_development_dependency "minitest", "~> 5.0"
+  spec.add_development_dependency "rake", "~> 12.3"
+  spec.add_development_dependency "minitest", "~> 5.11"
+  spec.add_development_dependency "minitest-reporters"
+  spec.add_development_dependency "pry"
 end
