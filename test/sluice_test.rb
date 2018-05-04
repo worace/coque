@@ -32,4 +32,10 @@ describe Sluice do
     res = (Sluice::Cmd["ls"] | Sluice::Cmd["wc", "-l"]).run
     assert_equal(["13"], res.map(&:strip))
   end
+
+  it "can pipe to ruby" do
+    assert_equal("CODE_OF_CONDUCT.md", Sluice::Cmd["ls"].run.first)
+    res = (Sluice::Cmd["ls"] | Sluice::Crb.new { |l| puts l.downcase }).run
+    assert_equal("code_of_conduct.md", res.first)
+  end
 end
