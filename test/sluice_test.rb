@@ -34,8 +34,30 @@ describe Sluice do
   end
 
   it "can pipe to ruby" do
-    assert_equal("CODE_OF_CONDUCT.md", Sluice::Cmd["ls"].run.first)
-    res = (Sluice::Cmd["ls"] | Sluice::Crb.new { |l| puts l.downcase }).run
-    assert_equal("code_of_conduct.md", res.first)
+    assert_equal("hi", Sluice::Cmd["echo", "hi"].run.sort.first)
+    res = (Sluice::Cmd["echo", "hi"] | Sluice::Crb.new { |l| puts l.upcase }).run
+    assert_equal("HI", res.sort.first)
+  end
+
+  it "can redirect" do
+    out = Tempfile.new
+    res = (Sluice::Cmd["echo", "hi"] > out).run
+    Process.waitpid(res.pid)
+    assert_equal "hi\n", File.read(out.path)
+  end
+
+  it "can redirect ruby" do
+    skip
+    out = Tempfile.new
+    res = (Sluice::Cmd["echo", "hi"] | Sluice::Crb.new { |l| puts l.upcase } > out).run
+    Process.waitpid(res.pid)
+
+    assert_equal "HI\n", File.read(out.path)
+  end
+
+  it "stitches a pipeline" do
+    p = (Sluice::Cmd["ls"] | Sluice::Cmd["wc", "-l"])
+    res = p.run
+    assert_equal(["13"], res.to_a)
   end
 end
