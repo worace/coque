@@ -2,10 +2,6 @@ require "sluice/version"
 
 module Sluice
   class BaseCmd
-    def run(stdin, stdout = STDOUT, stderr = STDERR)
-      raise "Not Implemented"
-    end
-
     def |(other)
       case other
       when Cmd
@@ -19,12 +15,34 @@ module Sluice
   end
 
   class Cmd < BaseCmd
+    attr_reader :args
     def initialize(args)
       @args = args
     end
 
     def self.[](*args)
       Cmd.new(args)
+    end
+
+    def run(stdin = nil, stdout = nil)
+      if stdin.nil?
+        puts "set stdin"
+        inr, inw = IO.pipe
+        inw.close
+        stdin = inr
+      end
+      puts stdin
+
+      if stdout.nil?
+        puts "set stdout"
+        outr, outw = IO.pipe
+        stdout = outw
+      end
+      puts stdout
+
+      pid = spawn(args.join(" "), in: stdin, stdin => stdin, out: stdout, stdout => stdout)
+      stdout.close
+      [pid, outr]
     end
   end
 
@@ -33,7 +51,7 @@ module Sluice
       @block = block
     end
 
-    def run(stdin, stdout)
+    def run(stdin = nil, stdout = nil)
       fork do
         STDOUT.reopen(stdout)
         stdin.each_line(&@block)
