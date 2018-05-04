@@ -105,13 +105,6 @@ class Crb
   end
 end
 
-# TODO
-# [ ] Stdin redirect ( < )
-# [ ] Stdout redirect ( > )
-# [ ] Stderr redirect ( > )
-# [ ] ENV setting
-# [ ] Chdir
-# [ ] Backgrounding
 
 c = Cmd['cat', '/usr/share/dict/words'] | Cmd['head'] | Crb.new { |line| puts "crb - #{line}" }
 puts "pipeline: #{c}"
