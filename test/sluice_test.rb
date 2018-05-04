@@ -46,13 +46,12 @@ describe Sluice do
     assert_equal "hi\n", File.read(out.path)
   end
 
-  it "can redirect ruby" do
-    skip
+  it "can redirect a pipeline" do
     out = Tempfile.new
-    res = (Sluice::Cmd["echo", "hi"] | Sluice::Crb.new { |l| puts l.upcase } > out).run
+    res = (Sluice::Cmd["echo", "hi"] | Sluice::Cmd["wc", "-c"] > out).run
     Process.waitpid(res.pid)
 
-    assert_equal "HI\n", File.read(out.path)
+    assert_equal "3\n", File.read(out.path)
   end
 
   it "stitches a pipeline" do

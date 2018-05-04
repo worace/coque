@@ -1,6 +1,31 @@
 require "sluice/version"
 
 module Sluice
+  module Redirectable
+    attr_reader :stdin, :stdout, :stderr
+
+    def >(io)
+      self.stdout = io
+      self
+    end
+
+    def stdout=(s)
+      if defined? @stdout
+        raise RedirectionError.new("Can't set stdout of #{self} to #{s}, is already set to #{stdout}")
+      else
+        @stdout = s
+      end
+    end
+
+    def stdin=(s)
+      if defined? @stdin
+        raise RedirectionError.new("Can't set stdin of #{self} to #{s}, is already set to #{stdin}")
+      else
+        @stdin = s
+      end
+    end
+  end
+
   class RedirectionError < RuntimeError
   end
 
@@ -21,7 +46,7 @@ module Sluice
   end
 
   class BaseCmd
-    attr_reader :stdin, :stdout
+    include Redirectable
 
     def |(other)
       case other
@@ -34,26 +59,6 @@ module Sluice
       end
     end
 
-    def >(io)
-      @stdout = io
-      self
-    end
-
-    def stdout=(s)
-      if defined? @stdout
-        raise RedirectionError.new("Can't set stdout of #{self} to #{s}, is already set to #{stdout}")
-      else
-        @stdout = s
-      end
-    end
-
-    def stdin=(s)
-      if defined? @stdin
-        raise RedirectionError.new("Can't set stdin of #{self} to #{s}, is already set to #{stdin}")
-      else
-        @stdin = s
-      end
-    end
   end
 
   class Cmd < BaseCmd
@@ -104,7 +109,9 @@ module Sluice
   end
 
   class Pipeline
-    attr_reader :commands, :stdout
+    include Redirectable
+
+    attr_reader :commands
     def initialize(commands = [])
       @commands = commands
     end
@@ -133,10 +140,22 @@ module Sluice
 
       start_r, start_w = IO.pipe
       start_w.close
-      commands.reduce(start_r) do |stdin, cmd|
+
+      out = commands[0..-2].reduce(start_r) do |stdin, cmd|
         cmd.stdin = stdin
         next_r, next_w = IO.pipe
         cmd.stdout = next_w
+        next_r
+      end
+
+      commands.last.stdin = out
+
+      if self.stdout
+        commands.last.stdout = stdout
+        stdout
+      else
+        next_r, next_w = IO.pipe
+        commands.last.stdout = next_w
         next_r
       end
     end
@@ -145,11 +164,6 @@ module Sluice
       stdout = stitch
       results = commands.map(&:run)
       Result.new(results.last.pid, stdout)
-    end
-
-    def >(io)
-      @stdout = io
-      self
     end
   end
 end
