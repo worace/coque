@@ -1,6 +1,22 @@
 require "sluice/version"
 
 module Sluice
+  class Result
+    attr_reader :pid
+    include Enumerable
+
+    def initialize(pid, out)
+      @pid = pid
+      @out = out
+    end
+
+    def each(&block)
+      @out.each_line do |line|
+        block.call(line.chomp)
+      end
+    end
+  end
+
   class BaseCmd
     def |(other)
       case other
@@ -26,23 +42,19 @@ module Sluice
 
     def run(stdin = nil, stdout = nil)
       if stdin.nil?
-        puts "set stdin"
         inr, inw = IO.pipe
         inw.close
         stdin = inr
       end
-      puts stdin
 
       if stdout.nil?
-        puts "set stdout"
         outr, outw = IO.pipe
         stdout = outw
       end
-      puts stdout
 
       pid = spawn(args.join(" "), in: stdin, stdin => stdin, out: stdout, stdout => stdout)
       stdout.close
-      [pid, outr]
+      Result.new(pid, outr)
     end
   end
 

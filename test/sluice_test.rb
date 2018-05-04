@@ -10,8 +10,8 @@ describe Sluice do
   end
 
   it "runs a command" do
-    pid, out = Sluice::Cmd["ls"].run
-    puts pid
-    assert(out.readlines.map(&:chomp).include?("Rakefile"))
+    res = Sluice::Cmd["ls"].run
+    assert(res.include?("Rakefile"))
+    assert(res.pid > 0)
   end
 end
