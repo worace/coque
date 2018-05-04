@@ -15,10 +15,21 @@ describe Sluice do
     assert(res.pid > 0)
   end
 
-  it "can buffer to array" do
+  it "isn't cache by default" do
+    res = Sluice::Cmd["ls"].run
+    assert_equal(13, res.count)
+    assert_equal(0, res.count)
+  end
+
+  it "can store as array" do
     res = Sluice::Cmd["ls"].run.to_a
     assert_equal(13, res.count)
     # Can check a second time as result is cached
     assert_equal(13, res.count)
+  end
+
+  it "can pipe together commands" do
+    res = (Sluice::Cmd["ls"] | Sluice::Cmd["wc", "-l"]).run
+    assert_equal(["13"], res.map(&:strip))
   end
 end

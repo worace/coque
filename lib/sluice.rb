@@ -111,7 +111,7 @@ module Sluice
         in_write = out_write
       end
       out_write.close
-      [pids, out_read]
+      Result.new(pids.last, out_read)
     end
   end
 end
