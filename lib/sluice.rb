@@ -1,4 +1,5 @@
 require "sluice/version"
+require "pathname"
 
 module Sluice
   module Redirectable
@@ -9,11 +10,33 @@ module Sluice
       self
     end
 
+    def <(io)
+      self.stdin = io
+      self
+    end
+
+    def getio(io)
+      case io
+      when String
+        File.open(io)
+      when Pathname
+        File.open(io)
+      when IO
+        io
+      when File
+        io
+      when Tempfile
+        io
+      else
+        raise ArgumentError.new("Can't redirect stream to #{io}, must be String, Pathname, or IO")
+      end
+    end
+
     def stdout=(s)
       if defined? @stdout
         raise RedirectionError.new("Can't set stdout of #{self} to #{s}, is already set to #{stdout}")
       else
-        @stdout = s
+        @stdout = getio(s)
       end
     end
 
@@ -21,7 +44,7 @@ module Sluice
       if defined? @stdin
         raise RedirectionError.new("Can't set stdin of #{self} to #{s}, is already set to #{stdin}")
       else
-        @stdin = s
+        @stdin = getio(s)
       end
     end
   end
@@ -42,6 +65,11 @@ module Sluice
       @out.each_line do |line|
         block.call(line.chomp)
       end
+    end
+
+    def wait
+      Process.waitpid(pid)
+      self
     end
   end
 
@@ -117,7 +145,7 @@ module Sluice
     end
 
     def to_s
-      "Pipeline of #{commands.join("|")}"
+      "<Pipeline #{commands.join(" | ")} >"
     end
 
     def |(other)
@@ -132,23 +160,21 @@ module Sluice
     end
 
     def stitch
-      # ([nil] + commands + [nil]).each_cons do |left, right|
-      #   if left.nil?
-      #     start_r, start_w = IO.pipe
-      #   end
-      # end
+      # Set head in
+      # Connect intermediate in/outs
+      # Set tail out
 
-      start_r, start_w = IO.pipe
-      start_w.close
-
-      out = commands[0..-2].reduce(start_r) do |stdin, cmd|
-        cmd.stdin = stdin
-        next_r, next_w = IO.pipe
-        cmd.stdout = next_w
-        next_r
+      if commands.first.stdin.nil?
+        start_r, start_w = IO.pipe
+        start_w.close
+        commands.first.stdin = start_r
       end
 
-      commands.last.stdin = out
+      commands.each_cons(2) do |left, right|
+        read, write = IO.pipe
+        left.stdout = write
+        right.stdin = read
+      end
 
       if self.stdout
         commands.last.stdout = stdout
