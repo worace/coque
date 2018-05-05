@@ -41,8 +41,7 @@ describe Sluice do
 
   it "can redirect stdout" do
     out = Tempfile.new
-    res = (Sluice::Cmd["echo", "hi"] > out).run
-    Process.waitpid(res.pid)
+    res = (Sluice::Cmd["echo", "hi"] > out).run.wait
     assert_equal "hi\n", File.read(out.path)
   end
 
@@ -70,5 +69,12 @@ describe Sluice do
   it "can redirect stdin of pipeline" do
     res = ((Sluice::Cmd["head", "-n", "5"] < "/usr/share/dict/words") | Sluice::Cmd["wc", "-l"]).run.to_a
     assert_equal ["5"], res
+  end
+
+  it "can include already-redirected command in pipeline" do
+    out = Tempfile.new
+    c = Sluice::Cmd["wc", "-c"] > out
+    (Sluice::Cmd["echo", "hi"] | c).run.wait
+    assert_equal("3\n", File.read(out.path))
   end
 end

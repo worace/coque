@@ -12,6 +12,7 @@ TODO: Delete this and the text above, and describe your gem
 * [ ] ENV setting
 * [ ] Chdir
 * [ ] Backgrounding
+* [ ] Waiting on process when redirected to file
 
 ## Installation
 
