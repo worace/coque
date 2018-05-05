@@ -149,6 +149,11 @@ module Sluice
     end
 
     def |(other)
+      # TODO - Compatibility checks when combining
+      # - new command must be first command or have open stdin
+      # - new command can't have stdout if pipeline has stdout
+      # - if combining with other pipeline, must not have its own stdin
+      # - others ???
       case other
       when Pipeline
         Pipeline.new(commands + other.commands)
