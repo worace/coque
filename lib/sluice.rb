@@ -72,7 +72,7 @@ module Sluice
   end
 
   class Result
-    attr_reader :pid
+    attr_reader :pid, :exit_code
     include Enumerable
 
     def initialize(pid, out)
@@ -84,10 +84,14 @@ module Sluice
       @out.each_line do |line|
         block.call(line.chomp)
       end
+      unless defined? @exit_code
+        wait
+      end
     end
 
     def wait
-      Process.waitpid(pid)
+      _, status = Process.waitpid2(pid)
+      @exit_code = status.exitstatus
       self
     end
   end

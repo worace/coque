@@ -103,4 +103,10 @@ describe Sluice do
       pipeline | Sluice::Cmd["wc", "-c"]
     end
   end
+
+  it "stores exit code in result" do
+    cmd = Sluice::Cmd["cat", "/sgsadg/asgdasdg/asgsagsg/ag"]
+    res = cmd.run.wait
+    assert_equal 1, res.exit_code
+  end
 end
