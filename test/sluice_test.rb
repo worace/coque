@@ -115,4 +115,28 @@ describe Sluice do
     cmd.run.wait
     assert_equal "cat: /sgsadg/asgdasdg/asgsagsg/ag: No such file or directory\n", File.read(out.path)
   end
+
+  it "can manipulate context properties" do
+    ctx = Sluice::Context.new
+    assert_equal Hash.new, ctx.env
+    assert ctx.inherits_env?
+    assert ctx.dir.is_a?(String)
+  end
+
+  it "can chdir" do
+    ctx = Sluice::Context.new.chdir("/tmp")
+    assert_equal ["/tmp"], ctx["pwd"].run.to_a
+  end
+
+  it "can set env" do
+    ctx = Sluice::Context.new.setenv(pizza: "pie")
+    assert_equal ["pie"], ctx["echo", "$pizza"].run.to_a
+  end
+
+  it "can unset baseline env" do
+    ENV["SLUICE_TEST"] = "testing"
+    assert_equal ["testing"], Sluice::Cmd["echo", "$SLUICE_TEST"].run.to_a
+    ctx = Sluice::Context.new.disinherit_env
+    assert_equal [""], ctx["echo", "$SLUICE_TEST"].run.to_a
+  end
 end

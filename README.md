@@ -10,9 +10,10 @@ TODO: Delete this and the text above, and describe your gem
 * [x] Stdout redirect ( > )
 * [x] Waiting on process when redirected to file
 * [x] Stderr redirect ( >2 )
+* [x] ENV setting
+* [x] Clear Env
+* [x] Chdir
 * [ ] Stderr to Stdout redirection( 2>&1 shortcut)
-* [ ] ENV setting
-* [ ] Chdir
 * [ ] Backgrounding
 
 ## Installation

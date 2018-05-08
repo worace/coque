@@ -131,8 +131,9 @@ module Sluice
   end
 
   class Cmd < BaseCmd
-    attr_reader :args
-    def initialize(args)
+    attr_reader :args, :context
+    def initialize(context, args)
+      @context = context
       @args = args
     end
 
@@ -141,7 +142,7 @@ module Sluice
     end
 
     def self.[](*args)
-      Cmd.new(args)
+      Context.new[*args]
     end
 
     def run
@@ -157,7 +158,8 @@ module Sluice
       end
 
       opts = {in: stdin, stdin.fileno => stdin.fileno,
-              out: stdout, stdout.fileno => stdout.fileno}
+              out: stdout, stdout.fileno => stdout.fileno,
+              chdir: context.dir, unsetenv_others: !context.inherits_env?}
 
       # Redirect err to out:
       # {err: [:child, :out]}
@@ -167,7 +169,7 @@ module Sluice
                    {}
                  end
 
-      pid = spawn(args.join(" "), opts.merge(err_opts))
+      pid = spawn(context.env, args.join(" "), opts.merge(err_opts))
 
       stdout.close
       Result.new(pid, outr)
@@ -175,8 +177,9 @@ module Sluice
   end
 
   class Crb < BaseCmd
-    def initialize(&block)
+    def initialize(context = Context.new, &block)
       @block = block
+      @context = context
     end
 
     def run
@@ -245,6 +248,36 @@ module Sluice
       stdout = stitch
       results = commands.map(&:run)
       Result.new(results.last.pid, stdout)
+    end
+  end
+
+  class Context
+    attr_reader :dir, :env
+    def initialize(dir = Dir.pwd, env = {}, inherits_env = true)
+      @dir = dir
+      @env = env
+      @inherits_env = inherits_env
+    end
+
+    def inherits_env?
+      @inherits_env
+    end
+
+    def [](*args)
+      Cmd.new(self, args)
+    end
+
+    def chdir(new_dir)
+      Context.new(new_dir, env, inherits_env?)
+    end
+
+    def setenv(opts)
+      opts = opts.map { |k,v| [k.to_s, v.to_s] }.to_h
+      Context.new(dir, self.env.merge(opts), inherits_env?)
+    end
+
+    def disinherit_env
+      Context.new(dir, {}, false)
     end
   end
 end
