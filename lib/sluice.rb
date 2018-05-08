@@ -15,6 +15,11 @@ module Sluice
       self
     end
 
+    def >>(io)
+      self.stderr = io
+      self
+    end
+
     def getio(io)
       case io
       when String
@@ -40,8 +45,20 @@ module Sluice
       defined? @stdout
     end
 
+    def stderr_redirected?
+      defined? @stderr
+    end
+
+    def stderr=(s)
+      if stderr_redirected?
+        raise RedirectionError.new("Can't set stderr of #{self} to #{s}, is already set to #{stderr}")
+      else
+        @stderr = getio(s)
+      end
+    end
+
     def stdout=(s)
-      if defined? @stdout
+      if stdout_redirected?
         raise RedirectionError.new("Can't set stdout of #{self} to #{s}, is already set to #{stdout}")
       else
         @stdout = getio(s)
@@ -49,7 +66,7 @@ module Sluice
     end
 
     def stdin=(s)
-      if defined? @stdin
+      if stdin_redirected?
         raise RedirectionError.new("Can't set stdin of #{self} to #{s}, is already set to #{stdin}")
       else
         @stdin = getio(s)
@@ -139,7 +156,19 @@ module Sluice
         self.stdout = outw
       end
 
-      pid = spawn(args.join(" "), in: stdin, stdin.fileno => stdin.fileno, out: stdout, stdout.fileno => stdout.fileno)
+      opts = {in: stdin, stdin.fileno => stdin.fileno,
+              out: stdout, stdout.fileno => stdout.fileno}
+
+      # Redirect err to out:
+      # {err: [:child, :out]}
+      err_opts = if stderr
+                   {err: stderr, stderr.fileno => stderr.fileno}
+                 else
+                   {}
+                 end
+
+      pid = spawn(args.join(" "), opts.merge(err_opts))
+
       stdout.close
       Result.new(pid, outr)
     end

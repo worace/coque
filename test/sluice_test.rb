@@ -41,7 +41,7 @@ describe Sluice do
 
   it "can redirect stdout" do
     out = Tempfile.new
-    res = (Sluice::Cmd["echo", "hi"] > out).run.wait
+    (Sluice::Cmd["echo", "hi"] > out).run.wait
     assert_equal "hi\n", File.read(out.path)
   end
 
@@ -92,7 +92,6 @@ describe Sluice do
   end
 
   it "cannot pipe stdout-redirected command to subsequent command" do
-    out = Tempfile.new
     redirected = Sluice::Cmd["echo", "hi"] > Tempfile.new
     assert_raises(Sluice::RedirectionError) do
       redirected | Sluice::Cmd["wc", "-c"]
@@ -105,8 +104,15 @@ describe Sluice do
   end
 
   it "stores exit code in result" do
-    cmd = Sluice::Cmd["cat", "/sgsadg/asgdasdg/asgsagsg/ag"]
+    cmd = Sluice::Cmd["cat", "/sgsadg/asgdasdg/asgsagsg/ag"] >> "/dev/null"
     res = cmd.run.wait
     assert_equal 1, res.exit_code
+  end
+
+  it "can redirect stderr" do
+    out = Tempfile.new
+    cmd = Sluice::Cmd["cat", "/sgsadg/asgdasdg/asgsagsg/ag"] >> out
+    cmd.run.wait
+    assert_equal "cat: /sgsadg/asgdasdg/asgsagsg/ag: No such file or directory\n", File.read(out.path)
   end
 end

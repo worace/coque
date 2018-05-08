@@ -6,13 +6,14 @@ TODO: Delete this and the text above, and describe your gem
 
 ## Todo
 
-* [ ] Stdin redirect ( < )
-* [ ] Stdout redirect ( > )
-* [ ] Stderr redirect ( > )
+* [x] Stdin redirect ( < )
+* [x] Stdout redirect ( > )
+* [x] Waiting on process when redirected to file
+* [x] Stderr redirect ( >2 )
+* [ ] Stderr to Stdout redirection( 2>&1 shortcut)
 * [ ] ENV setting
 * [ ] Chdir
 * [ ] Backgrounding
-* [ ] Waiting on process when redirected to file
 
 ## Installation
 
