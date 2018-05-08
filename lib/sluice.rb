@@ -32,6 +32,14 @@ module Sluice
       end
     end
 
+    def stdin_redirected?
+      defined? @stdin
+    end
+
+    def stdout_redirected?
+      defined? @stdout
+    end
+
     def stdout=(s)
       if defined? @stdout
         raise RedirectionError.new("Can't set stdout of #{self} to #{s}, is already set to #{stdout}")
@@ -47,6 +55,17 @@ module Sluice
         @stdin = getio(s)
       end
     end
+
+    def verify_redirectable(other)
+      if self.stdout_redirected?
+        raise RedirectionError.new("Can't pipe #{self} into #{other} -- #{self}'s STDIN is already redirected")
+      end
+
+      if other.stdin_redirected?
+        raise RedirectionError.new("Can't pipe #{self} into #{other} -- #{other}'s STDIN is already redirected")
+      end
+    end
+
   end
 
   class RedirectionError < RuntimeError
@@ -77,6 +96,7 @@ module Sluice
     include Redirectable
 
     def |(other)
+      verify_redirectable(other)
       case other
       when Cmd
         Pipeline.new([self, other])
@@ -149,11 +169,7 @@ module Sluice
     end
 
     def |(other)
-      # TODO - Compatibility checks when combining
-      # - new command must be first command or have open stdin
-      # - new command can't have stdout if pipeline has stdout
-      # - if combining with other pipeline, must not have its own stdin
-      # - others ???
+      verify_redirectable(other)
       case other
       when Pipeline
         Pipeline.new(commands + other.commands)

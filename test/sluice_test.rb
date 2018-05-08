@@ -77,4 +77,30 @@ describe Sluice do
     (Sluice::Cmd["echo", "hi"] | c).run.wait
     assert_equal("3\n", File.read(out.path))
   end
+
+  it "cannot add command with already-redirected stdin as subsequent step of pipeline" do
+    redirected = (Sluice::Cmd["head", "-n", "5"] < "/usr/share/dict/words")
+    assert_raises(Sluice::RedirectionError) do
+      Sluice::Cmd["printf", "1\n2\n3\n4\n5\n"] | redirected
+    end
+
+    pipeline = (Sluice::Cmd["printf", "1\n2\n3\n"] | Sluice::Cmd["head", "-n", "2"])
+    next_cmd = Sluice::Cmd["wc", "-c"] < "/usr/share/dict/words"
+    assert_raises(Sluice::RedirectionError) do
+      pipeline | next_cmd
+    end
+  end
+
+  it "cannot pipe stdout-redirected command to subsequent command" do
+    out = Tempfile.new
+    redirected = Sluice::Cmd["echo", "hi"] > Tempfile.new
+    assert_raises(Sluice::RedirectionError) do
+      redirected | Sluice::Cmd["wc", "-c"]
+    end
+
+    pipeline = (Sluice::Cmd["printf", "1\n2\n3\n"] | Sluice::Cmd["head", "-n", "2"]) > Tempfile.new
+    assert_raises(Sluice::RedirectionError) do
+      pipeline | Sluice::Cmd["wc", "-c"]
+    end
+  end
 end
