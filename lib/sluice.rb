@@ -169,13 +169,17 @@ module Sluice
       Context.new[*args]
     end
 
+    def [](*new_args)
+      Cmd.new(self.context, self.args + new_args)
+    end
+
     def run
       ensure_default_fds
       opts = {in: stdin, stdin.fileno => stdin.fileno,
               out: stdout, stdout.fileno => stdout.fileno,
               chdir: context.dir, unsetenv_others: context.disinherits_env?}
 
-      # Redirect err to out:
+      # Redirect err to out: (e.g. for 2>&1)
       # {err: [:child, :out]}
       err_opts = if stderr
                    {err: stderr, stderr.fileno => stderr.fileno}

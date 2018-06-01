@@ -179,8 +179,30 @@ describe Sluice do
     assert_equal ["/tmp"], ctx.rb.pre { puts Dir.pwd }.run.to_a
   end
 
+  it "can clone partially-applied commands" do
+    local = Sluice::Context.new
+    echo = local["echo"]
+
+    assert_equal ["hi"], echo["hi"].run.to_a
+    assert_equal ["ho"], echo["ho"].run.to_a
+  end
+
+  it "can subsequently redirect a partially-applied command" do
+    local = Sluice::Context.new
+    echo = local["echo"]
+
+    o1 = Tempfile.new
+    o2 = Tempfile.new
+
+    (echo["hi"] > o1).run.wait
+    (echo["ho"] > o2).run.wait
+
+    assert_equal "hi\n", File.read(o1)
+    assert_equal "ho\n", File.read(o2)
+  end
+
   # TODO
-  # [ ] Can partial-apply command args and add more using []
+  # [X] Can partial-apply command args and add more using []
   # [ ] Can use partial-applied command multiple times with different STDOUTs
   # [ ] Can Fix 2> redirection operator (>err? )
   # [X] Can apply chdir, env, and disinherit_env to Crb forks
