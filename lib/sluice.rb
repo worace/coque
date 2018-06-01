@@ -124,6 +124,7 @@ module Sluice
 
   class BaseCmd
     include Redirectable
+    attr_reader :context
 
     def |(other)
       verify_redirectable(other)
@@ -154,7 +155,7 @@ module Sluice
   end
 
   class Cmd < BaseCmd
-    attr_reader :args, :context
+    attr_reader :args
     def initialize(context, args)
       @context = context
       @args = args
@@ -222,6 +223,9 @@ module Sluice
 
       pid = fork do
         STDOUT.reopen(stdout)
+        context.env.each do |k,v|
+          ENV[k] = v
+        end
         @pre_block.call if @pre_block
         stdin.each_line(&@block)
         @post_block.call if @post_block

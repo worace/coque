@@ -159,8 +159,9 @@ describe Sluice do
   end
 
   it "applies ENV settings to CRB commands" do
-    # c = Sluice::Context.new.setenv(pizza: "pie")
-    # (Sluice::Cmd["echo", "hi"] | Sluice::Crb.new { |l| puts l.upcase })
+    ctx = Sluice::Context.new.setenv(pizza: "pie")
+    cmd = ctx.rb.pre { puts ENV["pizza"]}
+    assert_equal ["pie"], cmd.run.to_a
   end
 
   # TODO
