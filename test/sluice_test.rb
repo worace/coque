@@ -146,12 +146,16 @@ describe Sluice do
   end
 
   it "can set pre/post commands for crb" do
-    # c = Sluice::Crb.new
+    c = Sluice::Crb.new.pre { puts "pizza" }.post { puts "pie"}
+    assert_equal ["pizza", "pie"], c.run.to_a
   end
 
   it "can create Crb command from a context" do
-    # c = Sluice::Context.new
-    # c.rb { |l| puts l }.pre
+    ctx = Sluice::Context.new
+    input = ctx["echo", "hi"]
+    cmd = input | ctx.rb { |l| puts l.upcase }.pre { puts "pizza"}
+
+    assert_equal ["pizza", "HI"], cmd.run.to_a
   end
 
   it "applies ENV settings to CRB commands" do

@@ -191,16 +191,30 @@ module Sluice
 
   class Crb < BaseCmd
     NOOP = Proc.new { }
-    attr_reader :block, :pre, :post
+    attr_reader :block, :pre_block, :post_block
     def initialize(context = Context.new, &block)
       if block_given?
         @block = block
       else
         @block = NOOP
       end
-      @pre = nil
-      @post = nil
+      @pre_block = nil
+      @post_block = nil
       @context = context
+    end
+
+    def pre(&block)
+      if block_given?
+        @pre_block = block
+      end
+      self
+    end
+
+    def post(&block)
+      if block_given?
+        @post_block = block
+      end
+      self
     end
 
     def run
@@ -208,9 +222,9 @@ module Sluice
 
       pid = fork do
         STDOUT.reopen(stdout)
-        @pre.call if @pre
+        @pre_block.call if @pre_block
         stdin.each_line(&@block)
-        @post.call if @pre
+        @post_block.call if @post_block
       end
       stdout.close
       Result.new(pid, stdout_read)
@@ -293,7 +307,7 @@ module Sluice
     end
 
     def rb(&block)
-      Crb.new(self, block)
+      Crb.new(self, &block)
     end
 
     def chdir(new_dir)
