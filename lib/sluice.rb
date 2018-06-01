@@ -173,7 +173,7 @@ module Sluice
       ensure_default_fds
       opts = {in: stdin, stdin.fileno => stdin.fileno,
               out: stdout, stdout.fileno => stdout.fileno,
-              chdir: context.dir, unsetenv_others: !context.inherits_env?}
+              chdir: context.dir, unsetenv_others: context.disinherits_env?}
 
       # Redirect err to out:
       # {err: [:child, :out]}
@@ -223,6 +223,10 @@ module Sluice
 
       pid = fork do
         STDOUT.reopen(stdout)
+        Dir.chdir(context.dir)
+        if context.disinherits_env?
+          ENV.clear
+        end
         context.env.each do |k,v|
           ENV[k] = v
         end
@@ -296,14 +300,14 @@ module Sluice
 
   class Context
     attr_reader :dir, :env
-    def initialize(dir = Dir.pwd, env = {}, inherits_env = true)
+    def initialize(dir = Dir.pwd, env = {}, disinherits_env = false)
       @dir = dir
       @env = env
-      @inherits_env = inherits_env
+      @disinherits_env = disinherits_env
     end
 
-    def inherits_env?
-      @inherits_env
+    def disinherits_env?
+      @disinherits_env
     end
 
     def [](*args)
@@ -315,16 +319,16 @@ module Sluice
     end
 
     def chdir(new_dir)
-      Context.new(new_dir, env, inherits_env?)
+      Context.new(new_dir, env, disinherits_env?)
     end
 
     def setenv(opts)
       opts = opts.map { |k,v| [k.to_s, v.to_s] }.to_h
-      Context.new(dir, self.env.merge(opts), inherits_env?)
+      Context.new(dir, self.env.merge(opts), disinherits_env?)
     end
 
     def disinherit_env
-      Context.new(dir, {}, false)
+      Context.new(dir, {}, true)
     end
   end
 end

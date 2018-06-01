@@ -119,8 +119,9 @@ describe Sluice do
   it "can manipulate context properties" do
     ctx = Sluice::Context.new
     assert_equal Hash.new, ctx.env
-    assert ctx.inherits_env?
+    refute ctx.disinherits_env?
     assert ctx.dir.is_a?(String)
+    assert ctx.disinherit_env.disinherits_env?
   end
 
   it "can chdir" do
@@ -164,11 +165,25 @@ describe Sluice do
     assert_equal ["pie"], cmd.run.to_a
   end
 
+  it "disinherits env for Crb" do
+    ENV["SLUICE_TEST"] = "testing"
+    ctx = Sluice::Context.new.disinherit_env
+    cmd = ctx.rb.pre { puts ENV["SLUICE_TEST"]}
+    assert_equal [""], cmd.run.to_a
+    # Clearing env in subprocess doesn't affect parent
+    assert_equal "testing", ENV["SLUICE_TEST"]
+  end
+
+  it "chdirs for Crb" do
+    ctx = Sluice::Context.new.chdir("/tmp")
+    assert_equal ["/tmp"], ctx.rb.pre { puts Dir.pwd }.run.to_a
+  end
+
   # TODO
   # [ ] Can partial-apply command args and add more using []
   # [ ] Can use partial-applied command multiple times with different STDOUTs
   # [ ] Can Fix 2> redirection operator (>err? )
-  # [ ] Can apply chdir, env, and disinherit_env to Crb forks
-  # [ ] Can fork CRB from context
-  # [ ] Can provide pre/post blocks for Crb
+  # [X] Can apply chdir, env, and disinherit_env to Crb forks
+  # [X] Can fork CRB from context
+  # [X] Can provide pre/post blocks for Crb
 end
