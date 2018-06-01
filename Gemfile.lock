@@ -1,7 +1,7 @@
 PATH
   remote: .
   specs:
-    sluice (0.1.0)
+    sluice-gem (0.1.0)
 
 GEM
   remote: https://rubygems.org/
@@ -31,7 +31,7 @@ DEPENDENCIES
   minitest-reporters
   pry
   rake (~> 12.3)
-  sluice!
+  sluice-gem!
 
 BUNDLED WITH
    1.16.1

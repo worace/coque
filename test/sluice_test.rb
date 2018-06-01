@@ -139,4 +139,31 @@ describe Sluice do
     ctx = Sluice::Context.new.disinherit_env
     assert_equal [""], ctx["echo", "$SLUICE_TEST"].run.to_a
   end
+
+  it "inits Crb with noop by default" do
+    c = Sluice::Crb.new
+    assert_equal [], c.run.to_a
+  end
+
+  it "can set pre/post commands for crb" do
+    # c = Sluice::Crb.new
+  end
+
+  it "can create Crb command from a context" do
+    # c = Sluice::Context.new
+    # c.rb { |l| puts l }.pre
+  end
+
+  it "applies ENV settings to CRB commands" do
+    # c = Sluice::Context.new.setenv(pizza: "pie")
+    # (Sluice::Cmd["echo", "hi"] | Sluice::Crb.new { |l| puts l.upcase })
+  end
+
+  # TODO
+  # [ ] Can partial-apply command args and add more using []
+  # [ ] Can use partial-applied command multiple times with different STDOUTs
+  # [ ] Can Fix 2> redirection operator (>err? )
+  # [ ] Can apply chdir, env, and disinherit_env to Crb forks
+  # [ ] Can fork CRB from context
+  # [ ] Can provide pre/post blocks for Crb
 end

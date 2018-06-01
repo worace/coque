@@ -4,7 +4,7 @@ $LOAD_PATH.unshift(lib) unless $LOAD_PATH.include?(lib)
 require "sluice/version"
 
 Gem::Specification.new do |spec|
-  spec.name          = "sluice"
+  spec.name          = "sluice-gem"
   spec.version       = Sluice::VERSION
   spec.authors       = ["Horace Williams"]
   spec.email         = ["horace@worace.works"]

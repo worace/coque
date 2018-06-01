@@ -83,6 +83,15 @@ module Sluice
       end
     end
 
+    private
+
+    def stdout_read
+      if defined? @stdout_read
+        @stdout_read
+      else
+        nil
+      end
+    end
   end
 
   class RedirectionError < RuntimeError
@@ -128,6 +137,20 @@ module Sluice
       end
     end
 
+    def ensure_default_fds
+      if self.stdin.nil?
+        inr, inw = IO.pipe
+        inw.close
+        self.stdin = inr
+      end
+
+      if self.stdout.nil?
+        outr, outw = IO.pipe
+        self.stdout = outw
+        # only used for Result if this is the last command in a pipe
+        @stdout_read = outr
+      end
+    end
   end
 
   class Cmd < BaseCmd
@@ -146,17 +169,7 @@ module Sluice
     end
 
     def run
-      if self.stdin.nil?
-        inr, inw = IO.pipe
-        inw.close
-        self.stdin = inr
-      end
-
-      if self.stdout.nil?
-        outr, outw = IO.pipe
-        self.stdout = outw
-      end
-
+      ensure_default_fds
       opts = {in: stdin, stdin.fileno => stdin.fileno,
               out: stdout, stdout.fileno => stdout.fileno,
               chdir: context.dir, unsetenv_others: !context.inherits_env?}
@@ -172,23 +185,35 @@ module Sluice
       pid = spawn(context.env, args.join(" "), opts.merge(err_opts))
 
       stdout.close
-      Result.new(pid, outr)
+      Result.new(pid, stdout_read)
     end
   end
 
   class Crb < BaseCmd
+    NOOP = Proc.new { }
+    attr_reader :block, :pre, :post
     def initialize(context = Context.new, &block)
-      @block = block
+      if block_given?
+        @block = block
+      else
+        @block = NOOP
+      end
+      @pre = nil
+      @post = nil
       @context = context
     end
 
     def run
+      ensure_default_fds
+
       pid = fork do
         STDOUT.reopen(stdout)
+        @pre.call if @pre
         stdin.each_line(&@block)
+        @post.call if @pre
       end
       stdout.close
-      Result.new(pid, stdout)
+      Result.new(pid, stdout_read)
     end
   end
 
@@ -265,6 +290,10 @@ module Sluice
 
     def [](*args)
       Cmd.new(self, args)
+    end
+
+    def rb(&block)
+      Crb.new(self, block)
     end
 
     def chdir(new_dir)
