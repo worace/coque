@@ -1,5 +1,7 @@
 require "test_helper"
 
+TMP = `cd /tmp && pwd -P`.chomp
+
 describe Sluice do
   it "tests" do
     assert true
@@ -49,7 +51,7 @@ describe Sluice do
     out = Tempfile.new
     (Sluice::Cmd["echo", "hi"] | Sluice::Cmd["wc", "-c"] > out).run.wait
 
-    assert_equal "3\n", File.read(out.path)
+    assert_equal "3\n", File.read(out.path).lstrip
   end
 
   it "redirects with ruby" do
@@ -68,14 +70,14 @@ describe Sluice do
 
   it "can redirect stdin of pipeline" do
     res = ((Sluice::Cmd["head", "-n", "5"] < "/usr/share/dict/words") | Sluice::Cmd["wc", "-l"]).run.to_a
-    assert_equal ["5"], res
+    assert_equal ["5"], res.map(&:lstrip)
   end
 
   it "can include already-redirected command in pipeline" do
     out = Tempfile.new
     c = Sluice::Cmd["wc", "-c"] > out
     (Sluice::Cmd["echo", "hi"] | c).run.wait
-    assert_equal("3\n", File.read(out.path))
+    assert_equal("3\n", File.read(out.path).lstrip)
   end
 
   it "cannot add command with already-redirected stdin as subsequent step of pipeline" do
@@ -126,7 +128,7 @@ describe Sluice do
 
   it "can chdir" do
     ctx = Sluice::Context.new.chdir("/tmp")
-    assert_equal ["/tmp"], ctx["pwd"].run.to_a
+    assert_equal [TMP], ctx["pwd"].run.to_a
   end
 
   it "can set env" do
@@ -176,7 +178,7 @@ describe Sluice do
 
   it "chdirs for Crb" do
     ctx = Sluice::Context.new.chdir("/tmp")
-    assert_equal ["/tmp"], ctx.rb.pre { puts Dir.pwd }.run.to_a
+    assert_equal [TMP], ctx.rb.pre { puts Dir.pwd }.run.to_a
   end
 
   it "can clone partially-applied commands" do
