@@ -2,6 +2,15 @@ require "sluice/version"
 require "pathname"
 
 module Sluice
+
+  def self.context(dir: Dir.pwd, env: {}, disinherits_env: false)
+    Context.new(dir, env, disinherits_env)
+  end
+
+  def self.[](*args)
+    Context.new[*args]
+  end
+
   module Redirectable
     attr_reader :stdin, :stdout, :stderr
 
@@ -163,10 +172,6 @@ module Sluice
 
     def to_s
       "<Cmd #{args.inspect}>"
-    end
-
-    def self.[](*args)
-      Context.new[*args]
     end
 
     def [](*new_args)

@@ -12,108 +12,108 @@ describe Sluice do
   end
 
   it "runs a command" do
-    res = Sluice::Cmd["ls"].run
+    res = Sluice["ls"].run
     assert(res.include?("Rakefile"))
     assert(res.pid > 0)
   end
 
-  it "isn't cache by default" do
-    res = Sluice::Cmd["ls"].run
+  it "doesn't cache results" do
+    res = Sluice["ls"].run
     assert_equal(13, res.count)
     assert_equal(0, res.count)
   end
 
   it "can store as array" do
-    res = Sluice::Cmd["ls"].run.to_a
+    res = Sluice["ls"].run.to_a
     assert_equal(13, res.count)
     # Can check a second time as result is cached
     assert_equal(13, res.count)
   end
 
   it "can pipe together commands" do
-    res = (Sluice::Cmd["ls"] | Sluice::Cmd["wc", "-l"]).run
+    res = (Sluice["ls"] | Sluice["wc", "-l"]).run
     assert_equal(["13"], res.map(&:strip))
   end
 
   it "can pipe to ruby" do
-    assert_equal("hi", Sluice::Cmd["echo", "hi"].run.sort.first)
-    res = (Sluice::Cmd["echo", "hi"] | Sluice::Crb.new { |l| puts l.upcase }).run
+    assert_equal("hi", Sluice["echo", "hi"].run.sort.first)
+    res = (Sluice["echo", "hi"] | Sluice::Crb.new { |l| puts l.upcase }).run
     assert_equal("HI", res.sort.first)
   end
 
   it "can redirect stdout" do
     out = Tempfile.new
-    (Sluice::Cmd["echo", "hi"] > out).run.wait
+    (Sluice["echo", "hi"] > out).run.wait
     assert_equal "hi\n", File.read(out.path)
   end
 
   it "can redirect a pipeline stdout" do
     out = Tempfile.new
-    (Sluice::Cmd["echo", "hi"] | Sluice::Cmd["wc", "-c"] > out).run.wait
+    (Sluice["echo", "hi"] | Sluice["wc", "-c"] > out).run.wait
 
     assert_equal "3\n", File.read(out.path).lstrip
   end
 
   it "redirects with ruby" do
     out = Tempfile.new
-    (Sluice::Cmd["echo", "hi"] |
-     Sluice::Cmd["wc", "-c"] |
+    (Sluice["echo", "hi"] |
+     Sluice["wc", "-c"] |
      Sluice::Crb.new { |l| puts l.to_i + 1 } > out).run.wait
 
     assert_equal "4\n", File.read(out.path)
   end
 
   it "can redirect stdin of command" do
-    res = (Sluice::Cmd["head", "-n", "1"] < "/usr/share/dict/words").run.to_a
+    res = (Sluice["head", "-n", "1"] < "/usr/share/dict/words").run.to_a
     assert_equal ["A"], res
   end
 
   it "can redirect stdin of pipeline" do
-    res = ((Sluice::Cmd["head", "-n", "5"] < "/usr/share/dict/words") | Sluice::Cmd["wc", "-l"]).run.to_a
+    res = ((Sluice["head", "-n", "5"] < "/usr/share/dict/words") | Sluice["wc", "-l"]).run.to_a
     assert_equal ["5"], res.map(&:lstrip)
   end
 
   it "can include already-redirected command in pipeline" do
     out = Tempfile.new
-    c = Sluice::Cmd["wc", "-c"] > out
-    (Sluice::Cmd["echo", "hi"] | c).run.wait
+    c = Sluice["wc", "-c"] > out
+    (Sluice["echo", "hi"] | c).run.wait
     assert_equal("3\n", File.read(out.path).lstrip)
   end
 
   it "cannot add command with already-redirected stdin as subsequent step of pipeline" do
-    redirected = (Sluice::Cmd["head", "-n", "5"] < "/usr/share/dict/words")
+    redirected = (Sluice["head", "-n", "5"] < "/usr/share/dict/words")
     assert_raises(Sluice::RedirectionError) do
-      Sluice::Cmd["printf", "1\n2\n3\n4\n5\n"] | redirected
+      Sluice["printf", "1\n2\n3\n4\n5\n"] | redirected
     end
 
-    pipeline = (Sluice::Cmd["printf", "1\n2\n3\n"] | Sluice::Cmd["head", "-n", "2"])
-    next_cmd = Sluice::Cmd["wc", "-c"] < "/usr/share/dict/words"
+    pipeline = (Sluice["printf", "1\n2\n3\n"] | Sluice["head", "-n", "2"])
+    next_cmd = Sluice["wc", "-c"] < "/usr/share/dict/words"
     assert_raises(Sluice::RedirectionError) do
       pipeline | next_cmd
     end
   end
 
   it "cannot pipe stdout-redirected command to subsequent command" do
-    redirected = Sluice::Cmd["echo", "hi"] > Tempfile.new
+    redirected = Sluice["echo", "hi"] > Tempfile.new
     assert_raises(Sluice::RedirectionError) do
-      redirected | Sluice::Cmd["wc", "-c"]
+      redirected | Sluice["wc", "-c"]
     end
 
-    pipeline = (Sluice::Cmd["printf", "1\n2\n3\n"] | Sluice::Cmd["head", "-n", "2"]) > Tempfile.new
+    pipeline = (Sluice["printf", "1\n2\n3\n"] | Sluice["head", "-n", "2"]) > Tempfile.new
     assert_raises(Sluice::RedirectionError) do
-      pipeline | Sluice::Cmd["wc", "-c"]
+      pipeline | Sluice["wc", "-c"]
     end
   end
 
   it "stores exit code in result" do
-    cmd = Sluice::Cmd["cat", "/sgsadg/asgdasdg/asgsagsg/ag"] >> "/dev/null"
+    cmd = Sluice["cat", "/sgsadg/asgdasdg/asgsagsg/ag"] >> "/dev/null"
     res = cmd.run.wait
     assert_equal 1, res.exit_code
   end
 
   it "can redirect stderr" do
     out = Tempfile.new
-    cmd = Sluice::Cmd["cat", "/sgsadg/asgdasdg/asgsagsg/ag"] >> out
+    cmd = Sluice["cat", "/sgsadg/asgdasdg/asgsagsg/ag"] >> out
     cmd.run.wait
     assert_equal "cat: /sgsadg/asgdasdg/asgsagsg/ag: No such file or directory\n", File.read(out.path)
   end
@@ -138,7 +138,7 @@ describe Sluice do
 
   it "can unset baseline env" do
     ENV["SLUICE_TEST"] = "testing"
-    assert_equal ["testing"], Sluice::Cmd["echo", "$SLUICE_TEST"].run.to_a
+    assert_equal ["testing"], Sluice["echo", "$SLUICE_TEST"].run.to_a
     ctx = Sluice::Context.new.disinherit_env
     assert_equal [""], ctx["echo", "$SLUICE_TEST"].run.to_a
   end
@@ -203,11 +203,27 @@ describe Sluice do
     assert_equal "ho\n", File.read(o2)
   end
 
+  it "can create context from the top-level namespace" do
+    assert Sluice.context.is_a?(Sluice::Context)
+
+    assert_equal "/tmp", Sluice.context(dir: "/tmp").dir
+    assert_equal "pie", Sluice.context(env: {pizza: "pie"}).env[:pizza]
+    assert Sluice.context(disinherits_env: true).disinherits_env?
+  end
+
+  it "can use top-level helper method to construct pipeline of multiple commands" do
+    # echo = Sluice["echo", "hi"]
+  end
+
   # TODO
   # [X] Can partial-apply command args and add more using []
-  # [ ] Can use partial-applied command multiple times with different STDOUTs
-  # [ ] Can Fix 2> redirection operator (>err? )
   # [X] Can apply chdir, env, and disinherit_env to Crb forks
   # [X] Can fork CRB from context
   # [X] Can provide pre/post blocks for Crb
+  # [ ] Can use partial-applied command multiple times with different STDOUTs
+  # [ ] Can Fix 2> redirection operator (>err? )
+  # [ ] Rename Gem
+  # [ ] Usage examples in readme
+  # [ ] Sluice.pipeline helper method
+  # [X] Sluice.context helper method
 end
