@@ -1,50 +1,44 @@
 # Coque
 
-Welcome to your new gem! In this directory, you'll find the files you need to be able to package up your Ruby library into a gem. Put your Ruby code in the file `lib/coque`. To experiment with that code, run `bin/console` for an interactive prompt.
-
-TODO: Delete this and the text above, and describe your gem
-
-## Todo
-
-* [x] Stdin redirect ( < )
-* [x] Stdout redirect ( > )
-* [x] Waiting on process when redirected to file
-* [x] Stderr redirect ( >2 )
-* [x] ENV setting
-* [x] Clear Env
-* [x] Chdir
-* [ ] Stderr to Stdout redirection( 2>&1 shortcut)
-* [ ] Backgrounding
-
 ## Installation
 
-Add this line to your application's Gemfile:
+Add to your gemfile:
 
 ```ruby
 gem 'coque'
 ```
 
-And then execute:
-
-    $ bundle
-
-Or install it yourself as:
-
-    $ gem install coque
-
 ## Usage
 
-TODO: Write usage instructions here
+### Streaming Performance
+
+Should be little overhead compared with the equivalent pipeline from a standard shell.
+
+From zsh:
+
+```
+head -c 100000000 /dev/urandom | pv | wc -c
+95.4MiB 0:00:06 [14.1MiB/s] [      <=>      ]
+ 100000000
+```
+
+With coque:
+
+```rb
+p = Coque["head", "-c", "100000000", "/dev/urandom"] | Coque["pv"] | Coque["wc", "-c"]
+p.run.wait
+95.4MiB 0:00:06 [14.6MiB/s] [           <=> ]
+```
 
 ## Development
 
-After checking out the repo, run `bin/setup` to install dependencies. Then, run `rake test` to run the tests. You can also run `bin/console` for an interactive prompt that will allow you to experiment.
-
-To install this gem onto your local machine, run `bundle exec rake install`. To release a new version, update the version number in `version.rb`, and then run `bundle exec rake release`, which will create a git tag for the version, push git commits and tags, and push the `.gem` file to [rubygems.org](https://rubygems.org).
-
-## Contributing
-
-Bug reports and pull requests are welcome on GitHub at https://github.com/[worace]/coque. This project is intended to be a safe, welcoming space for collaboration, and contributors are expected to adhere to the [Contributor Covenant](http://contributor-covenant.org) code of conduct.
+* Setup local environment with standard `bundle`
+* Run tests with `rake`
+* See code coverage output in `coverage/`
+* Start a pry console with `bin/console`
+* Install current dev version with `rake install`
+* Use `rake release` to release after bumping `lib/coque/version.rb`
+* New issues welcome
 
 ## License
 
