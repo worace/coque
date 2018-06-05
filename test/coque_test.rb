@@ -41,10 +41,47 @@ describe Coque do
     assert_equal("HI", res.sort.first)
   end
 
+  it "can combine multiple pipelines with pipe" do
+    p1 = Coque["printf", '"a\nb\nab\n1\n2\n"'] | Coque["head", "-n", "3"]
+    p2 = Coque["grep", "a"] | Coque["tail", "-n", "1"]
+
+    combined = p1 | p2
+
+    assert_equal ["ab"], combined.run.to_a
+
+  end
+
   it "can redirect stdout" do
     out = Tempfile.new
     (Coque["echo", "hi"] > out).run.wait
     assert_equal "hi\n", File.read(out.path)
+  end
+
+  it "can redirect various IO types" do
+    c = Coque["echo", "hi"]
+
+    path = Dir.tmpdir + Time.now.to_f.to_s
+
+    (c > File.open(path, "w")).run.wait
+    assert_equal ["hi\n"], File.readlines(path).to_a
+
+    FileUtils.rm(path)
+
+    (c > path).run.wait
+    assert_equal ["hi\n"], File.readlines(path).to_a
+
+    FileUtils.rm(path)
+    (c > Pathname(path)).run.wait
+    assert_equal ["hi\n"], File.readlines(path).to_a
+
+    FileUtils.rm(path)
+    (c > File.open(path, "w")).run.wait
+    assert_equal ["hi\n"], File.readlines(path).to_a
+
+    # Raises on unhandled type
+    assert_raises ArgumentError do
+      c > Object.new
+    end
   end
 
   it "can redirect a pipeline stdout" do
@@ -90,6 +127,23 @@ describe Coque do
     next_cmd = Coque["wc", "-c"] < "/usr/share/dict/words"
     assert_raises(Coque::RedirectionError) do
       pipeline | next_cmd
+    end
+  end
+
+  it "raises error on reassignment of std streams" do
+    c = Coque["cat"] < Tempfile.new
+    assert_raises(Coque::RedirectionError) do
+      c.stdin = Tempfile.new
+    end
+
+    c = Coque["echo", "hi"] > Tempfile.new
+    assert_raises(Coque::RedirectionError) do
+      c.stdout = Tempfile.new
+    end
+
+    c = Coque["echo", "hi"] >> Tempfile.new
+    assert_raises(Coque::RedirectionError) do
+      c.stderr = Tempfile.new
     end
   end
 
@@ -219,9 +273,23 @@ describe Coque do
     assert_equal ["2"], pipe.run.to_a.map(&:lstrip)
   end
 
-  it "can re-use a command with different out streams" do
+  it "can re-use Sh with different out streams" do
     local = Coque::Context.new
     echo = local["echo", "hi"]
+
+    o1 = Tempfile.new
+    o2 = Tempfile.new
+
+    (echo > o1).run.wait
+    (echo > o2).run.wait
+
+    assert_equal "hi\n", File.read(o1)
+    assert_equal "hi\n", File.read(o2)
+  end
+
+  it "can re-use Rb with different out streams" do
+    local = Coque::Context.new
+    echo = local.rb.pre { puts "hi" }
 
     o1 = Tempfile.new
     o2 = Tempfile.new

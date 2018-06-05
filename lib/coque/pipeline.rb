@@ -22,8 +22,6 @@ module Coque
         Pipeline.new(commands + other.commands)
       when Cmd
         Pipeline.new(commands + [other])
-      when RbCmd
-        Pipeline.new(commands + [other])
       end
     end
 
