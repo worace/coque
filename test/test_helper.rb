@@ -3,6 +3,12 @@ require 'simplecov'
 
 SimpleCov.start
 
+# Maybe let's us track when forking?
+# pid = Process.pid
+# SimpleCov.at_exit do
+#   SimpleCov.result.format! if Process.pid == pid
+# end
+
 require "coque"
 require "minitest/autorun"
 require "minitest/reporters"

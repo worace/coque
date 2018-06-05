@@ -22,15 +22,13 @@ module Coque
       end
     end
 
-    def getio(io)
+    def getio(io, mode = "r")
       case io
       when String
-        File.open(io)
+        File.open(io, mode)
       when Pathname
-        File.open(io)
+        File.open(io, mode)
       when IO
-        io
-      when File
         io
       when Tempfile
         io
@@ -55,7 +53,7 @@ module Coque
       if stderr_redirected?
         raise RedirectionError.new("Can't set stderr of #{self} to #{s}, is already set to #{stderr}")
       else
-        @stderr = getio(s)
+        @stderr = getio(s, "w")
       end
     end
 
@@ -63,7 +61,7 @@ module Coque
       if stdout_redirected?
         raise RedirectionError.new("Can't set stdout of #{self} to #{s}, is already set to #{stdout}")
       else
-        @stdout = getio(s)
+        @stdout = getio(s, "w")
       end
     end
 
@@ -71,7 +69,7 @@ module Coque
       if stdin_redirected?
         raise RedirectionError.new("Can't set stdin of #{self} to #{s}, is already set to #{stdin}")
       else
-        @stdin = getio(s)
+        @stdin = getio(s, "r")
       end
     end
 
