@@ -16,7 +16,7 @@ module Coque
       end
     end
 
-    def >>(io)
+    def >=(io)
       clone.tap do |c|
         c.stderr = io
       end

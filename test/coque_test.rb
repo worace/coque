@@ -141,7 +141,7 @@ describe Coque do
       c.stdout = Tempfile.new
     end
 
-    c = Coque["echo", "hi"] >> Tempfile.new
+    c = Coque["echo", "hi"] >= Tempfile.new
     assert_raises(Coque::RedirectionError) do
       c.stderr = Tempfile.new
     end
@@ -160,14 +160,14 @@ describe Coque do
   end
 
   it "stores exit code in result" do
-    cmd = Coque["cat", "/sgsadg/asgdasdg/asgsagsg/ag"] >> "/dev/null"
+    cmd = Coque["cat", "/sgsadg/asgdasdg/asgsagsg/ag"] >= "/dev/null"
     res = cmd.run.wait
     assert_equal 1, res.exit_code
   end
 
   it "can redirect stderr" do
     out = Tempfile.new
-    cmd = Coque["cat", "/sgsadg/asgdasdg/asgsagsg/ag"] >> out
+    cmd = Coque["cat", "/sgsadg/asgdasdg/asgsagsg/ag"] >= out
     cmd.run.wait
     assert_equal "cat: /sgsadg/asgdasdg/asgsagsg/ag: No such file or directory\n", File.read(out.path)
   end
@@ -306,8 +306,9 @@ describe Coque do
   # [X] Can apply chdir, env, and disinherit_env to Rb forks
   # [X] Can fork CRB from context
   # [X] Can provide pre/post blocks for Rb
-  # [ ] Can use partial-applied command multiple times with different STDOUTs
-  # [ ] Can Fix 2> redirection operator (>err? )
+  # [X] Can use partial-applied command multiple times with different STDOUTs
+  # [ ] Append-mode redirection operators (>= and >>err)
+  # [X] Can Fix 2> redirection operator (>err? >=)
   # [ ] Usage examples in readme
   # [X] Coque.pipeline helper method
   # [X] Rename to Coque
