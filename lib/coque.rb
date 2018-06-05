@@ -11,6 +11,10 @@ module Coque
     Context.new[*args]
   end
 
+  def self.pipeline(*commands)
+    commands.reduce(:|)
+  end
+
   module Redirectable
     attr_reader :stdin, :stdout, :stderr
 

@@ -212,7 +212,11 @@ describe Coque do
   end
 
   it "can use top-level helper method to construct pipeline of multiple commands" do
-    # echo = Coque["echo", "hi"]
+    echo = Coque["echo", "-n", "hi"]
+    wc = Coque["wc", "-c"]
+
+    pipe = Coque.pipeline(echo, wc)
+    assert_equal ["2"], pipe.run.to_a.map(&:lstrip)
   end
 
   # TODO
@@ -222,9 +226,8 @@ describe Coque do
   # [X] Can provide pre/post blocks for Crb
   # [ ] Can use partial-applied command multiple times with different STDOUTs
   # [ ] Can Fix 2> redirection operator (>err? )
-  # [ ] Rename Gem
   # [ ] Usage examples in readme
-  # [ ] Coque.pipeline helper method
-  # [ ] Rename to Coque
+  # [X] Coque.pipeline helper method
+  # [X] Rename to Coque
   # [X] Coque.context helper method
 end
