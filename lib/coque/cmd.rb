@@ -13,6 +13,10 @@ module Coque
       end
     end
 
+    def clone
+      raise "Not Implemented - Override"
+    end
+
     def ensure_default_fds
       if self.stdin.nil?
         inr, inw = IO.pipe

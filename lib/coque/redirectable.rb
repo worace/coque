@@ -5,18 +5,21 @@ module Coque
     attr_reader :stdin, :stdout, :stderr
 
     def >(io)
-      self.stdout = io
-      self
+      clone.tap do |c|
+        c.stdout = io
+      end
     end
 
     def <(io)
-      self.stdin = io
-      self
+      clone.tap do |c|
+        c.stdin = io
+      end
     end
 
     def >>(io)
-      self.stderr = io
-      self
+      clone.tap do |c|
+        c.stderr = io
+      end
     end
 
     def getio(io)

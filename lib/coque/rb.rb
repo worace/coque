@@ -13,6 +13,10 @@ module Coque
       @context = context
     end
 
+    def clone
+      self.class.new(context, &block).pre(&pre_block).post(&post_block)
+    end
+
     def pre(&block)
       if block_given?
         @pre_block = block

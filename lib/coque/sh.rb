@@ -1,9 +1,13 @@
 module Coque
   class Sh < Cmd
-    attr_reader :args
+    attr_reader :args, :context
     def initialize(context, args)
       @context = context
       @args = args
+    end
+
+    def clone
+      self.class.new(context, args)
     end
 
     def to_s

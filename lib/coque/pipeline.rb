@@ -7,6 +7,10 @@ module Coque
       @commands = commands
     end
 
+    def clone
+      self.class.new(commands)
+    end
+
     def to_s
       "<Pipeline #{commands.join(" | ")} >"
     end

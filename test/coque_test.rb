@@ -220,7 +220,6 @@ describe Coque do
   end
 
   it "can re-use a command with different out streams" do
-    skip
     local = Coque::Context.new
     echo = local["echo", "hi"]
 
