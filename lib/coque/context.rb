@@ -12,11 +12,11 @@ module Coque
     end
 
     def [](*args)
-      Cmd.new(self, args)
+      Sh.new(self, args)
     end
 
     def rb(&block)
-      RbCmd.new(self, &block)
+      Rb.new(self, &block)
     end
 
     def chdir(new_dir)

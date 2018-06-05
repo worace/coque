@@ -1,5 +1,5 @@
 module Coque
-  class RbCmd < BaseCmd
+  class Rb < Cmd
     NOOP = Proc.new { }
     attr_reader :block, :pre_block, :post_block
     def initialize(context = Context.new, &block)

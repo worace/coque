@@ -1,9 +1,10 @@
-require "coque/base_cmd"
+require "coque/redirectable"
 require "coque/cmd"
+require "coque/sh"
+require "coque/rb"
 require "coque/context"
 require "coque/errors"
 require "coque/pipeline"
-require "coque/redirectable"
 require "coque/result"
 require "coque/version"
 

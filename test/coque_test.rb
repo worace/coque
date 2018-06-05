@@ -37,7 +37,7 @@ describe Coque do
 
   it "can pipe to ruby" do
     assert_equal("hi", Coque["echo", "hi"].run.sort.first)
-    res = (Coque["echo", "hi"] | Coque::Crb.new { |l| puts l.upcase }).run
+    res = (Coque["echo", "hi"] | Coque::Rb.new { |l| puts l.upcase }).run
     assert_equal("HI", res.sort.first)
   end
 
@@ -58,7 +58,7 @@ describe Coque do
     out = Tempfile.new
     (Coque["echo", "hi"] |
      Coque["wc", "-c"] |
-     Coque::Crb.new { |l| puts l.to_i + 1 } > out).run.wait
+     Coque::Rb.new { |l| puts l.to_i + 1 } > out).run.wait
 
     assert_equal "4\n", File.read(out.path)
   end
@@ -143,17 +143,17 @@ describe Coque do
     assert_equal [""], ctx["echo", "$COQUE_TEST"].run.to_a
   end
 
-  it "inits Crb with noop by default" do
-    c = Coque::Crb.new
+  it "inits Rb with noop by default" do
+    c = Coque::Rb.new
     assert_equal [], c.run.to_a
   end
 
   it "can set pre/post commands for crb" do
-    c = Coque::Crb.new.pre { puts "pizza" }.post { puts "pie"}
+    c = Coque::Rb.new.pre { puts "pizza" }.post { puts "pie"}
     assert_equal ["pizza", "pie"], c.run.to_a
   end
 
-  it "can create Crb command from a context" do
+  it "can create Rb command from a context" do
     ctx = Coque::Context.new
     input = ctx["echo", "hi"]
     cmd = input | ctx.rb { |l| puts l.upcase }.pre { puts "pizza"}
@@ -167,7 +167,7 @@ describe Coque do
     assert_equal ["pie"], cmd.run.to_a
   end
 
-  it "disinherits env for Crb" do
+  it "disinherits env for Rb" do
     ENV["COQUE_TEST"] = "testing"
     ctx = Coque::Context.new.disinherit_env
     cmd = ctx.rb.pre { puts ENV["COQUE_TEST"]}
@@ -176,7 +176,7 @@ describe Coque do
     assert_equal "testing", ENV["COQUE_TEST"]
   end
 
-  it "chdirs for Crb" do
+  it "chdirs for Rb" do
     ctx = Coque::Context.new.chdir("/tmp")
     assert_equal [TMP], ctx.rb.pre { puts Dir.pwd }.run.to_a
   end
@@ -236,9 +236,9 @@ describe Coque do
 
   # TODO
   # [X] Can partial-apply command args and add more using []
-  # [X] Can apply chdir, env, and disinherit_env to Crb forks
+  # [X] Can apply chdir, env, and disinherit_env to Rb forks
   # [X] Can fork CRB from context
-  # [X] Can provide pre/post blocks for Crb
+  # [X] Can provide pre/post blocks for Rb
   # [ ] Can use partial-applied command multiple times with different STDOUTs
   # [ ] Can Fix 2> redirection operator (>err? )
   # [ ] Usage examples in readme
