@@ -1,7 +1,7 @@
 PATH
   remote: .
   specs:
-    sluice-gem (0.1.0)
+    coque (0.1.0)
 
 GEM
   remote: https://rubygems.org/
@@ -27,11 +27,11 @@ PLATFORMS
 
 DEPENDENCIES
   bundler (~> 1.16)
+  coque!
   minitest (~> 5.11)
   minitest-reporters
   pry
   rake (~> 12.3)
-  sluice-gem!
 
 BUNDLED WITH
    1.16.1

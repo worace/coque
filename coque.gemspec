@@ -1,17 +1,17 @@
 
 lib = File.expand_path("../lib", __FILE__)
 $LOAD_PATH.unshift(lib) unless $LOAD_PATH.include?(lib)
-require "sluice/version"
+require "coque/version"
 
 Gem::Specification.new do |spec|
-  spec.name          = "sluice-gem"
-  spec.version       = Sluice::VERSION
+  spec.name          = "coque"
+  spec.version       = Coque::VERSION
   spec.authors       = ["Horace Williams"]
   spec.email         = ["horace@worace.works"]
 
   spec.summary       = %q{Shell command utilities with easy integration with Ruby code.}
   spec.description   = %q{Like plumbum...for Ruby...with native Ruby streaming interop.}
-  spec.homepage      = "http://github.com/worace/sluice"
+  spec.homepage      = "http://github.com/worace/coque"
   spec.license       = "MIT"
 
   # Prevent pushing this gem to RubyGems.org. To allow pushes either set the 'allowed_push_host'

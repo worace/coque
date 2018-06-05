@@ -2,124 +2,124 @@ require "test_helper"
 
 TMP = `cd /tmp && pwd -P`.chomp
 
-describe Sluice do
+describe Coque do
   it "tests" do
     assert true
   end
 
   it "has version" do
-    refute_nil ::Sluice::VERSION
+    refute_nil ::Coque::VERSION
   end
 
   it "runs a command" do
-    res = Sluice["ls"].run
+    res = Coque["ls"].run
     assert(res.include?("Rakefile"))
     assert(res.pid > 0)
   end
 
   it "doesn't cache results" do
-    res = Sluice["ls"].run
+    res = Coque["ls"].run
     assert_equal(13, res.count)
     assert_equal(0, res.count)
   end
 
   it "can store as array" do
-    res = Sluice["ls"].run.to_a
+    res = Coque["ls"].run.to_a
     assert_equal(13, res.count)
     # Can check a second time as result is cached
     assert_equal(13, res.count)
   end
 
   it "can pipe together commands" do
-    res = (Sluice["ls"] | Sluice["wc", "-l"]).run
+    res = (Coque["ls"] | Coque["wc", "-l"]).run
     assert_equal(["13"], res.map(&:strip))
   end
 
   it "can pipe to ruby" do
-    assert_equal("hi", Sluice["echo", "hi"].run.sort.first)
-    res = (Sluice["echo", "hi"] | Sluice::Crb.new { |l| puts l.upcase }).run
+    assert_equal("hi", Coque["echo", "hi"].run.sort.first)
+    res = (Coque["echo", "hi"] | Coque::Crb.new { |l| puts l.upcase }).run
     assert_equal("HI", res.sort.first)
   end
 
   it "can redirect stdout" do
     out = Tempfile.new
-    (Sluice["echo", "hi"] > out).run.wait
+    (Coque["echo", "hi"] > out).run.wait
     assert_equal "hi\n", File.read(out.path)
   end
 
   it "can redirect a pipeline stdout" do
     out = Tempfile.new
-    (Sluice["echo", "hi"] | Sluice["wc", "-c"] > out).run.wait
+    (Coque["echo", "hi"] | Coque["wc", "-c"] > out).run.wait
 
     assert_equal "3\n", File.read(out.path).lstrip
   end
 
   it "redirects with ruby" do
     out = Tempfile.new
-    (Sluice["echo", "hi"] |
-     Sluice["wc", "-c"] |
-     Sluice::Crb.new { |l| puts l.to_i + 1 } > out).run.wait
+    (Coque["echo", "hi"] |
+     Coque["wc", "-c"] |
+     Coque::Crb.new { |l| puts l.to_i + 1 } > out).run.wait
 
     assert_equal "4\n", File.read(out.path)
   end
 
   it "can redirect stdin of command" do
-    res = (Sluice["head", "-n", "1"] < "/usr/share/dict/words").run.to_a
+    res = (Coque["head", "-n", "1"] < "/usr/share/dict/words").run.to_a
     assert_equal ["A"], res
   end
 
   it "can redirect stdin of pipeline" do
-    res = ((Sluice["head", "-n", "5"] < "/usr/share/dict/words") | Sluice["wc", "-l"]).run.to_a
+    res = ((Coque["head", "-n", "5"] < "/usr/share/dict/words") | Coque["wc", "-l"]).run.to_a
     assert_equal ["5"], res.map(&:lstrip)
   end
 
   it "can include already-redirected command in pipeline" do
     out = Tempfile.new
-    c = Sluice["wc", "-c"] > out
-    (Sluice["echo", "hi"] | c).run.wait
+    c = Coque["wc", "-c"] > out
+    (Coque["echo", "hi"] | c).run.wait
     assert_equal("3\n", File.read(out.path).lstrip)
   end
 
   it "cannot add command with already-redirected stdin as subsequent step of pipeline" do
-    redirected = (Sluice["head", "-n", "5"] < "/usr/share/dict/words")
-    assert_raises(Sluice::RedirectionError) do
-      Sluice["printf", "1\n2\n3\n4\n5\n"] | redirected
+    redirected = (Coque["head", "-n", "5"] < "/usr/share/dict/words")
+    assert_raises(Coque::RedirectionError) do
+      Coque["printf", "1\n2\n3\n4\n5\n"] | redirected
     end
 
-    pipeline = (Sluice["printf", "1\n2\n3\n"] | Sluice["head", "-n", "2"])
-    next_cmd = Sluice["wc", "-c"] < "/usr/share/dict/words"
-    assert_raises(Sluice::RedirectionError) do
+    pipeline = (Coque["printf", "1\n2\n3\n"] | Coque["head", "-n", "2"])
+    next_cmd = Coque["wc", "-c"] < "/usr/share/dict/words"
+    assert_raises(Coque::RedirectionError) do
       pipeline | next_cmd
     end
   end
 
   it "cannot pipe stdout-redirected command to subsequent command" do
-    redirected = Sluice["echo", "hi"] > Tempfile.new
-    assert_raises(Sluice::RedirectionError) do
-      redirected | Sluice["wc", "-c"]
+    redirected = Coque["echo", "hi"] > Tempfile.new
+    assert_raises(Coque::RedirectionError) do
+      redirected | Coque["wc", "-c"]
     end
 
-    pipeline = (Sluice["printf", "1\n2\n3\n"] | Sluice["head", "-n", "2"]) > Tempfile.new
-    assert_raises(Sluice::RedirectionError) do
-      pipeline | Sluice["wc", "-c"]
+    pipeline = (Coque["printf", "1\n2\n3\n"] | Coque["head", "-n", "2"]) > Tempfile.new
+    assert_raises(Coque::RedirectionError) do
+      pipeline | Coque["wc", "-c"]
     end
   end
 
   it "stores exit code in result" do
-    cmd = Sluice["cat", "/sgsadg/asgdasdg/asgsagsg/ag"] >> "/dev/null"
+    cmd = Coque["cat", "/sgsadg/asgdasdg/asgsagsg/ag"] >> "/dev/null"
     res = cmd.run.wait
     assert_equal 1, res.exit_code
   end
 
   it "can redirect stderr" do
     out = Tempfile.new
-    cmd = Sluice["cat", "/sgsadg/asgdasdg/asgsagsg/ag"] >> out
+    cmd = Coque["cat", "/sgsadg/asgdasdg/asgsagsg/ag"] >> out
     cmd.run.wait
     assert_equal "cat: /sgsadg/asgdasdg/asgsagsg/ag: No such file or directory\n", File.read(out.path)
   end
 
   it "can manipulate context properties" do
-    ctx = Sluice::Context.new
+    ctx = Coque::Context.new
     assert_equal Hash.new, ctx.env
     refute ctx.disinherits_env?
     assert ctx.dir.is_a?(String)
@@ -127,34 +127,34 @@ describe Sluice do
   end
 
   it "can chdir" do
-    ctx = Sluice::Context.new.chdir("/tmp")
+    ctx = Coque::Context.new.chdir("/tmp")
     assert_equal [TMP], ctx["pwd"].run.to_a
   end
 
   it "can set env" do
-    ctx = Sluice::Context.new.setenv(pizza: "pie")
+    ctx = Coque::Context.new.setenv(pizza: "pie")
     assert_equal ["pie"], ctx["echo", "$pizza"].run.to_a
   end
 
   it "can unset baseline env" do
-    ENV["SLUICE_TEST"] = "testing"
-    assert_equal ["testing"], Sluice["echo", "$SLUICE_TEST"].run.to_a
-    ctx = Sluice::Context.new.disinherit_env
-    assert_equal [""], ctx["echo", "$SLUICE_TEST"].run.to_a
+    ENV["COQUE_TEST"] = "testing"
+    assert_equal ["testing"], Coque["echo", "$COQUE_TEST"].run.to_a
+    ctx = Coque::Context.new.disinherit_env
+    assert_equal [""], ctx["echo", "$COQUE_TEST"].run.to_a
   end
 
   it "inits Crb with noop by default" do
-    c = Sluice::Crb.new
+    c = Coque::Crb.new
     assert_equal [], c.run.to_a
   end
 
   it "can set pre/post commands for crb" do
-    c = Sluice::Crb.new.pre { puts "pizza" }.post { puts "pie"}
+    c = Coque::Crb.new.pre { puts "pizza" }.post { puts "pie"}
     assert_equal ["pizza", "pie"], c.run.to_a
   end
 
   it "can create Crb command from a context" do
-    ctx = Sluice::Context.new
+    ctx = Coque::Context.new
     input = ctx["echo", "hi"]
     cmd = input | ctx.rb { |l| puts l.upcase }.pre { puts "pizza"}
 
@@ -162,27 +162,27 @@ describe Sluice do
   end
 
   it "applies ENV settings to CRB commands" do
-    ctx = Sluice::Context.new.setenv(pizza: "pie")
+    ctx = Coque::Context.new.setenv(pizza: "pie")
     cmd = ctx.rb.pre { puts ENV["pizza"]}
     assert_equal ["pie"], cmd.run.to_a
   end
 
   it "disinherits env for Crb" do
-    ENV["SLUICE_TEST"] = "testing"
-    ctx = Sluice::Context.new.disinherit_env
-    cmd = ctx.rb.pre { puts ENV["SLUICE_TEST"]}
+    ENV["COQUE_TEST"] = "testing"
+    ctx = Coque::Context.new.disinherit_env
+    cmd = ctx.rb.pre { puts ENV["COQUE_TEST"]}
     assert_equal [""], cmd.run.to_a
     # Clearing env in subprocess doesn't affect parent
-    assert_equal "testing", ENV["SLUICE_TEST"]
+    assert_equal "testing", ENV["COQUE_TEST"]
   end
 
   it "chdirs for Crb" do
-    ctx = Sluice::Context.new.chdir("/tmp")
+    ctx = Coque::Context.new.chdir("/tmp")
     assert_equal [TMP], ctx.rb.pre { puts Dir.pwd }.run.to_a
   end
 
   it "can clone partially-applied commands" do
-    local = Sluice::Context.new
+    local = Coque::Context.new
     echo = local["echo"]
 
     assert_equal ["hi"], echo["hi"].run.to_a
@@ -190,7 +190,7 @@ describe Sluice do
   end
 
   it "can subsequently redirect a partially-applied command" do
-    local = Sluice::Context.new
+    local = Coque::Context.new
     echo = local["echo"]
 
     o1 = Tempfile.new
@@ -204,15 +204,15 @@ describe Sluice do
   end
 
   it "can create context from the top-level namespace" do
-    assert Sluice.context.is_a?(Sluice::Context)
+    assert Coque.context.is_a?(Coque::Context)
 
-    assert_equal "/tmp", Sluice.context(dir: "/tmp").dir
-    assert_equal "pie", Sluice.context(env: {pizza: "pie"}).env[:pizza]
-    assert Sluice.context(disinherits_env: true).disinherits_env?
+    assert_equal "/tmp", Coque.context(dir: "/tmp").dir
+    assert_equal "pie", Coque.context(env: {pizza: "pie"}).env[:pizza]
+    assert Coque.context(disinherits_env: true).disinherits_env?
   end
 
   it "can use top-level helper method to construct pipeline of multiple commands" do
-    # echo = Sluice["echo", "hi"]
+    # echo = Coque["echo", "hi"]
   end
 
   # TODO
@@ -224,6 +224,7 @@ describe Sluice do
   # [ ] Can Fix 2> redirection operator (>err? )
   # [ ] Rename Gem
   # [ ] Usage examples in readme
-  # [ ] Sluice.pipeline helper method
-  # [X] Sluice.context helper method
+  # [ ] Coque.pipeline helper method
+  # [ ] Rename to Coque
+  # [X] Coque.context helper method
 end

@@ -1,7 +1,7 @@
-require "sluice/version"
+require "coque/version"
 require "pathname"
 
-module Sluice
+module Coque
 
   def self.context(dir: Dir.pwd, env: {}, disinherits_env: false)
     Context.new(dir, env, disinherits_env)
