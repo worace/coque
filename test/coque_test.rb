@@ -219,6 +219,21 @@ describe Coque do
     assert_equal ["2"], pipe.run.to_a.map(&:lstrip)
   end
 
+  it "can re-use a command with different out streams" do
+    skip
+    local = Coque::Context.new
+    echo = local["echo", "hi"]
+
+    o1 = Tempfile.new
+    o2 = Tempfile.new
+
+    (echo > o1).run.wait
+    (echo > o2).run.wait
+
+    assert_equal "hi\n", File.read(o1)
+    assert_equal "hi\n", File.read(o2)
+  end
+
   # TODO
   # [X] Can partial-apply command args and add more using []
   # [X] Can apply chdir, env, and disinherit_env to Crb forks
