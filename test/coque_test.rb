@@ -18,21 +18,21 @@ describe Coque do
   end
 
   it "doesn't cache results" do
-    res = Coque["ls"].run
-    assert_equal(13, res.count)
+    res = Coque["printf", '"1\n\2\n3\n"'].run
+    assert_equal(3, res.count)
     assert_equal(0, res.count)
   end
 
   it "can store as array" do
-    res = Coque["ls"].run.to_a
-    assert_equal(13, res.count)
+    res = Coque["printf", '"1\n\2\n3\n"'].run.to_a
+    assert_equal(3, res.count)
     # Can check a second time as result is cached
-    assert_equal(13, res.count)
+    assert_equal(3, res.count)
   end
 
   it "can pipe together commands" do
-    res = (Coque["ls"] | Coque["wc", "-l"]).run
-    assert_equal(["13"], res.map(&:strip))
+    res = (Coque["printf", '"1\n\2\n3\n"'] | Coque["wc", "-l"]).run
+    assert_equal(["3"], res.map(&:strip))
   end
 
   it "can pipe to ruby" do
