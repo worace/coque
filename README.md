@@ -40,6 +40,17 @@ p.run.wait
 * Use `rake release` to release after bumping `lib/coque/version.rb`
 * New issues welcome
 
+## Further Reading / Prior Art
+
+The concept and API for this library was heavily inspired by Python's excellent [Plumbum](https://plumbum.readthedocs.io/en/latest/) library.
+
+I relied on many resources to understand Ruby's great facilities for Process creation and manipulation. Some highlights include:
+
+* Avdi Grimm's _A dozen (or so) ways to start sub-processes in Ruby_ ([Part 1](https://devver.wordpress.com/2009/06/30/a-dozen-or-so-ways-to-start-sub-processes-in-ruby-part-1/), [Part 2](https://devver.wordpress.com/2009/07/13/a-dozen-or-so-ways-to-start-sub-processes-in-ruby-part-2/), [Part 3](https://devver.wordpress.com/2009/10/12/ruby-subprocesses-part_3/))
+* Ryan Tomayko's [I like Unicorn because it's Unix](https://tomayko.com/blog/2009/unicorn-is-unix)
+* Jesse Storimer's [Working With Unix Processes](https://www.jstorimer.com/products/working-with-unix-processes)
+* Brandon Wamboldt's blog series: [How bash redirection works](https://brandonwamboldt.ca/how-bash-redirection-works-under-the-hood-1512/), [How Linux pipes work](https://brandonwamboldt.ca/how-linux-pipes-work-under-the-hood-1518/), and [Understanding how Linux creates processes](https://brandonwamboldt.ca/how-linux-creates-processes-1528/)
+
 ## License
 
 The gem is available as open source under the terms of the [MIT License](https://opensource.org/licenses/MIT).
