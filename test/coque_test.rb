@@ -305,6 +305,16 @@ describe Coque do
     assert_equal "hi\n", File.read(o2)
   end
 
+  it "can re-use a command in multiple pipelines" do
+    skip
+    e = Coque["echo", "hi"]
+
+    assert_equal ["3"], (e | Coque["wc", "-c"]).run.to_a.map(&:lstrip)
+
+    assert_equal ["h"], (e | Coque["head", "-c", "1"]).run.to_a
+
+  end
+
   # TODO
   # [X] Can partial-apply command args and add more using []
   # [X] Can apply chdir, env, and disinherit_env to Rb forks
@@ -319,4 +329,5 @@ describe Coque do
   # [-] Usage examples in readme
   # [X] Intro text
   # [ ] Theme image for readme
+  # [ ] Allow mutliple pipe usages for single command
 end
