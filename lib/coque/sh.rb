@@ -11,7 +11,11 @@ module Coque
     end
 
     def to_s
-      "<Cmd::Sh #{args.inspect}>"
+      "<Coque::Sh #{args.inspect}>"
+    end
+
+    def inspect
+      to_s
     end
 
     def [](*new_args)
