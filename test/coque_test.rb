@@ -328,6 +328,6 @@ describe Coque do
   # [ ] Append-mode redirection operators (>= and >>err)
   # [-] Usage examples in readme
   # [X] Intro text
-  # [ ] Theme image for readme
+  # [ ] Theme image for readme (https://upload.wikimedia.org/wikipedia/commons/3/36/Nyst_1878_-_Cerastoderma_parkinsoni_R-klep.jpg ?)
   # [ ] Allow mutliple pipe usages for single command
 end
