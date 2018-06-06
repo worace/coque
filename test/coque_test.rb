@@ -311,10 +311,12 @@ describe Coque do
   # [X] Can fork CRB from context
   # [X] Can provide pre/post blocks for Rb
   # [X] Can use partial-applied command multiple times with different STDOUTs
-  # [ ] Append-mode redirection operators (>= and >>err)
   # [X] Can Fix 2> redirection operator (>err? >=)
-  # [ ] Usage examples in readme
   # [X] Coque.pipeline helper method
   # [X] Rename to Coque
   # [X] Coque.context helper method
+  # [ ] Append-mode redirection operators (>= and >>err)
+  # [-] Usage examples in readme
+  # [X] Intro text
+  # [ ] Theme image for readme
 end

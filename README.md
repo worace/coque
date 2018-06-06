@@ -1,5 +1,7 @@
 # Coque
 
+Create, manage, and interop with shell pipelines from Ruby. Like [Plumbum](https://plumbum.readthedocs.io/en/latest/), for Ruby, with native (Ruby) code streaming integration.
+
 ## Installation
 
 Add to your gemfile:
@@ -9,6 +11,79 @@ gem 'coque'
 ```
 
 ## Usage
+
+Create Coque commands:
+
+```rb
+cmd = Coque["echo", "hi"]
+# => <Coque::Sh ["echo", "hi"]>
+```
+
+And run them:
+
+```rb
+res = cmd.run
+# => #<Coque::Result:0x007feb5930e408 @out=#<IO:fd 13>, @pid=58688>
+res.to_a
+# => ["hi"]
+```
+
+Or pipe them:
+
+```rb
+pipeline = cmd | Coque["wc", "-c"]
+# => #<Coque::Pipeline:0x007feb598730b0 @commands=[<Coque::Sh ["echo", "hi"]>, <Coque::Sh ["wc", "-c"]>]>
+pipeline.run.to_a
+# => ["3"]
+```
+
+Coque can also create "Rb" commands, which integrate Ruby code with streaming, line-wise processing of other commands:
+
+```
+c1 = Coque["printf", '"a\nb\nc\n"']
+c2 = Coque.rb { |line| puts line.upcase }
+(c1 | c2).run.to_a
+# => ["A", "B", "C"]
+```
+
+Rb commands can also take "pre" and "post" blocks
+
+```
+dict = Coque["cat", "/usr/share/dict/words"]
+rb_wc = Coque.rb { @lines += 1 }.pre { @lines = 0 }.post { puts @lines }
+
+(dict | rb_wc).run.to_a
+# => ["235886"]
+```
+
+Commands can have Stdin, Stdout, and Stderr redirected
+
+```rb
+(Coque["echo", "hi"] > "/tmp/hi.txt").run.wait
+File.read("/tmp/hi.txt")
+# => "hi\n"
+
+(Coque["head", "-n", "4"] < "/usr/share/dict/words").run.to_a
+# => ["A", "a", "aa", "aal"]
+
+(Coque["cat", "/doesntexist.txt"] >= "/tmp/error.txt").run.wait
+File.read("/tmp/error.txt")
+# => "cat: /doesntexist.txt: No such file or directory\n"
+```
+
+Coque commands can also be derived from a `Coque::Context`:
+
+```rb
+c = Coque.context
+c["pwd"].run.to_a
+# => ["/Users/worace/code/coque"]
+
+Coque.context.chdir("/tmp")["pwd"].run.to_a
+# => ["/private/tmp"]
+
+Coque.context.setenv("my_key": "pizza")["echo", "$my_key"].run.to_a
+# => ["pizza"]
+```
 
 ### Streaming Performance
 
