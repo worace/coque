@@ -17,6 +17,10 @@ module Coque
     Context.new[*args]
   end
 
+  def self.rb(&block)
+    Rb.new(Context.new, &block)
+  end
+
   def self.pipeline(*commands)
     commands.reduce(:|)
   end

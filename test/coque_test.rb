@@ -273,6 +273,10 @@ describe Coque do
     assert_equal ["2"], pipe.run.to_a.map(&:lstrip)
   end
 
+  it "can create Rb commands from top-level" do
+    assert_equal ["hi"], Coque.rb.pre { puts "hi" }.run.to_a
+  end
+
   it "can re-use Sh with different out streams" do
     local = Coque::Context.new
     echo = local["echo", "hi"]
