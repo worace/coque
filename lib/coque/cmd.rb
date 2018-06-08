@@ -4,12 +4,11 @@ module Coque
     attr_reader :context
 
     def |(other)
-      verify_redirectable(other)
       case other
       when Cmd
-        Pipeline.new([self, other])
+        Pipeline.new([self.clone, other.clone])
       when Pipeline
-        Pipeline.new([self] + other.commands)
+        Pipeline.new([self.clone] + other.commands)
       end
     end
 
@@ -17,19 +16,31 @@ module Coque
       raise "Not Implemented - Override"
     end
 
-    def ensure_default_fds
-      if self.stdin.nil?
-        inr, inw = IO.pipe
-        inw.close
-        self.stdin = inr
-      end
+    def get_default_fds
+      stdin = if self.stdin
+                self.stdin
+              else
+                inr, inw = IO.pipe
+                inw.close
+                inr
+              end
 
-      if self.stdout.nil?
-        outr, outw = IO.pipe
-        self.stdout = outw
+      stdoutr, stdoutw = if self.stdout
+                           [self.stdout, self.stdout]
+                         else
+                           IO.pipe
+                         end
+
+      [stdin, stdoutr, stdoutw]
+
+      # if self.stdout.nil?
+        # puts "STDOUT for #{self} is nil, creating"
+        # outr, outw = IO.pipe
+        # self.stdout = outw
+        # puts "set to #{self.stdout}"
         # only used for Result if this is the last command in a pipe
-        @stdout_read = outr
-      end
+      #   @stdout_read = outr
+      # end
     end
   end
 end

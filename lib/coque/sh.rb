@@ -1,13 +1,16 @@
 module Coque
   class Sh < Cmd
     attr_reader :args, :context
-    def initialize(context, args)
+    def initialize(context, args, stdin = nil, stdout = nil, stderr = nil)
       @context = context
       @args = args
+      self.stdin = stdin if stdin
+      self.stdout = stdout if stdout
+      self.stderr = stderr if stderr
     end
 
     def clone
-      self.class.new(context, args)
+      self.class.new(context, args, stdin, stdout, stderr)
     end
 
     def to_s
@@ -23,9 +26,11 @@ module Coque
     end
 
     def run
-      ensure_default_fds
+      stdin, stdoutr, stdoutw = get_default_fds
+      puts "Redirect: in: #{stdin}, #{stdin.fileno} => #{stdin.fileno}"
+      puts "redirect: out: #{stdoutw} #{stdoutw.fileno} => #{stdoutw.fileno}"
       opts = {in: stdin, stdin.fileno => stdin.fileno,
-              out: stdout, stdout.fileno => stdout.fileno,
+              out: stdoutw, stdoutw.fileno => stdoutw.fileno,
               chdir: context.dir, unsetenv_others: context.disinherits_env?}
 
       # Redirect err to out: (e.g. for 2>&1)
@@ -38,8 +43,8 @@ module Coque
 
       pid = spawn(context.env, args.join(" "), opts.merge(err_opts))
 
-      stdout.close
-      Result.new(pid, stdout_read)
+      stdoutw.close
+      Result.new(pid, stdoutr)
     end
   end
 end

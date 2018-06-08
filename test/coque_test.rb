@@ -117,20 +117,34 @@ describe Coque do
     assert_equal("3\n", File.read(out.path).lstrip)
   end
 
-  it "cannot add command with already-redirected stdin as subsequent step of pipeline" do
+  it "Changes stdin of command when including it in pipeline" do
+    lines = Coque["printf", "\"1\n2\n3\n\""]
     redirected = (Coque["head", "-n", "5"] < "/usr/share/dict/words")
-    assert_raises(Coque::RedirectionError) do
-      Coque["printf", "1\n2\n3\n4\n5\n"] | redirected
-    end
 
-    pipeline = (Coque["printf", "1\n2\n3\n"] | Coque["head", "-n", "2"])
-    next_cmd = Coque["wc", "-c"] < "/usr/share/dict/words"
-    assert_raises(Coque::RedirectionError) do
-      pipeline | next_cmd
-    end
+    assert_equal ["A", "a", "aa", "aal", "aalii"], redirected.to_a
+    # Problem
+    # ensure_default_fds creates new IO instance for head
+    # When the pipeline is later run, it attempts to re-use this
+    # but it is closed
+    # Solution
+    # - don't allow pipeline to re-use existing stdout?
+    # - separate assigned fds from JIT-generated IO fds used
+    #   then running?
+    assert_equal ["1", "2", "3"], (lines | redirected).to_a
+
+    # pipeline = (Coque["printf", "1\n2\n3\n"] | Coque["head", "-n", "2"])
+    # next_cmd = Coque["wc", "-c"] < "/usr/share/dict/words"
+    # assert_raises(Coque::RedirectionError) do
+    #   pipeline | next_cmd
+    # end
+  end
+
+  it "uses tail command's stdout when including in pipeline" do
+    skip
   end
 
   it "raises error on reassignment of std streams" do
+    skip
     c = Coque["cat"] < Tempfile.new
     assert_raises(Coque::RedirectionError) do
       c.stdin = Tempfile.new
@@ -148,6 +162,7 @@ describe Coque do
   end
 
   it "cannot pipe stdout-redirected command to subsequent command" do
+    skip
     redirected = Coque["echo", "hi"] > Tempfile.new
     assert_raises(Coque::RedirectionError) do
       redirected | Coque["wc", "-c"]
@@ -305,14 +320,12 @@ describe Coque do
     assert_equal "hi\n", File.read(o2)
   end
 
-  it "can re-use a command in multiple pipelines" do
-    skip
+  it "can re-use a command in different pipelines" do
     e = Coque["echo", "hi"]
 
     assert_equal ["3"], (e | Coque["wc", "-c"]).run.to_a.map(&:lstrip)
 
     assert_equal ["h"], (e | Coque["head", "-c", "1"]).run.to_a
-
   end
 
   # TODO

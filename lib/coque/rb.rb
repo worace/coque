@@ -32,10 +32,10 @@ module Coque
     end
 
     def run
-      ensure_default_fds
+      stdin, stdoutr, stdoutw = get_default_fds
 
       pid = fork do
-        STDOUT.reopen(stdout)
+        STDOUT.reopen(stdoutw)
         Dir.chdir(context.dir)
         if context.disinherits_env?
           ENV.clear
@@ -47,8 +47,8 @@ module Coque
         stdin.each_line(&@block)
         @post_block.call if @post_block
       end
-      stdout.close
-      Result.new(pid, stdout_read)
+      stdoutw.close
+      Result.new(pid, stdoutr)
     end
   end
 end
