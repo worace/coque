@@ -225,6 +225,7 @@ describe Coque do
 
     assert_equal ["hi"], echo["hi"].run.to_a
     assert_equal ["ho"], echo["ho"].run.to_a
+    assert_equal ["3"], (echo["ho"] | Coque["wc", "-c"]).run.to_a
   end
 
   it "can subsequently redirect a partially-applied command" do
@@ -297,6 +298,12 @@ describe Coque do
     assert_equal ["h"], (e | Coque["head", "-c", "1"]).run.to_a
   end
 
+  it "can use pre/post blocks of Rb commands to maintain state" do
+    rb_wc = Coque.rb { @lines += 1 }.pre { @lines = 0 }.post { puts @lines }
+
+    assert_equal "15", (rb_wc < "./test/words.txt").run.first
+  end
+
   # TODO
   # [X] Can partial-apply command args and add more using []
   # [X] Can apply chdir, env, and disinherit_env to Rb forks
@@ -312,4 +319,5 @@ describe Coque do
   # [X] Intro text
   # [ ] Theme image for readme (https://upload.wikimedia.org/wikipedia/commons/3/36/Nyst_1878_-_Cerastoderma_parkinsoni_R-klep.jpg ?)
   # [X] Allow mutliple pipe usages for single command
+  # [ ] Add Coque::Sink to dump RB enumerables into pipelines
 end
