@@ -59,29 +59,31 @@ describe Coque do
 
   it "can redirect various IO types" do
     c = Coque["echo", "hi"]
+    Dir.mktmpdir("coque_tests") do |dir|
+      path = dir + "/test.txt"
 
-    path = Dir.tmpdir + Time.now.to_f.to_s
+      (c > File.open(path, "w")).run.wait
+      assert_equal ["hi\n"], File.readlines(path).to_a
 
-    (c > File.open(path, "w")).run.wait
-    assert_equal ["hi\n"], File.readlines(path).to_a
+      FileUtils.rm(path)
 
-    FileUtils.rm(path)
+      (c > path).run.wait
+      assert_equal ["hi\n"], File.readlines(path).to_a
 
-    (c > path).run.wait
-    assert_equal ["hi\n"], File.readlines(path).to_a
+      FileUtils.rm(path)
+      (c > Pathname(path)).run.wait
+      assert_equal ["hi\n"], File.readlines(path).to_a
 
-    FileUtils.rm(path)
-    (c > Pathname(path)).run.wait
-    assert_equal ["hi\n"], File.readlines(path).to_a
+      FileUtils.rm(path)
+      (c > File.open(path, "w")).run.wait
+      assert_equal ["hi\n"], File.readlines(path).to_a
 
-    FileUtils.rm(path)
-    (c > File.open(path, "w")).run.wait
-    assert_equal ["hi\n"], File.readlines(path).to_a
-
-    # Raises on unhandled type
-    assert_raises ArgumentError do
-      c > Object.new
+      # Raises on unhandled type
+      assert_raises ArgumentError do
+        c > Object.new
+      end
     end
+
   end
 
   it "can redirect a pipeline stdout" do
@@ -119,59 +121,26 @@ describe Coque do
 
   it "Changes stdin of command when including it in pipeline" do
     lines = Coque["printf", "\"1\n2\n3\n\""]
-    redirected = (Coque["head", "-n", "5"] < "/usr/share/dict/words")
+    redirected = (Coque["head", "-n", "5"] < "./test/words.txt")
 
-    assert_equal ["A", "a", "aa", "aal", "aalii"], redirected.to_a
-    # Problem
-    # ensure_default_fds creates new IO instance for head
-    # When the pipeline is later run, it attempts to re-use this
-    # but it is closed
-    # Solution
-    # - don't allow pipeline to re-use existing stdout?
-    # - separate assigned fds from JIT-generated IO fds used
-    #   then running?
+    assert_equal ["acculturation", "balustrades", "bantamweights", "begat", "brisk"], redirected.to_a
     assert_equal ["1", "2", "3"], (lines | redirected).to_a
+  end
 
-    # pipeline = (Coque["printf", "1\n2\n3\n"] | Coque["head", "-n", "2"])
-    # next_cmd = Coque["wc", "-c"] < "/usr/share/dict/words"
-    # assert_raises(Coque::RedirectionError) do
-    #   pipeline | next_cmd
-    # end
+  it "Changes stdin of RB command when includign it in pipeline" do
+    lines = Coque["printf", "\"1\n2\n3\n\""]
+    redirected = (Coque.rb { |l| puts l.upcase } < "./test/words.txt")
+    assert_equal "ACCULTURATION", redirected.to_a.first
+
+    assert_equal ["1", "2", "3"], (lines | redirected).to_a
   end
 
   it "uses tail command's stdout when including in pipeline" do
-    skip
-  end
-
-  it "raises error on reassignment of std streams" do
-    skip
-    c = Coque["cat"] < Tempfile.new
-    assert_raises(Coque::RedirectionError) do
-      c.stdin = Tempfile.new
-    end
-
-    c = Coque["echo", "hi"] > Tempfile.new
-    assert_raises(Coque::RedirectionError) do
-      c.stdout = Tempfile.new
-    end
-
-    c = Coque["echo", "hi"] >= Tempfile.new
-    assert_raises(Coque::RedirectionError) do
-      c.stderr = Tempfile.new
-    end
-  end
-
-  it "cannot pipe stdout-redirected command to subsequent command" do
-    skip
-    redirected = Coque["echo", "hi"] > Tempfile.new
-    assert_raises(Coque::RedirectionError) do
-      redirected | Coque["wc", "-c"]
-    end
-
-    pipeline = (Coque["printf", "1\n2\n3\n"] | Coque["head", "-n", "2"]) > Tempfile.new
-    assert_raises(Coque::RedirectionError) do
-      pipeline | Coque["wc", "-c"]
-    end
+    out = Tempfile.new
+    lines = Coque["printf", "\"1\n2\n3\n\""]
+    redirected = (Coque["head", "-n", "5"] > out)
+    (lines | redirected).run.wait
+    assert_equal "1\n2\n3\n", File.read(out)
   end
 
   it "stores exit code in result" do
@@ -342,5 +311,5 @@ describe Coque do
   # [-] Usage examples in readme
   # [X] Intro text
   # [ ] Theme image for readme (https://upload.wikimedia.org/wikipedia/commons/3/36/Nyst_1878_-_Cerastoderma_parkinsoni_R-klep.jpg ?)
-  # [ ] Allow mutliple pipe usages for single command
+  # [X] Allow mutliple pipe usages for single command
 end

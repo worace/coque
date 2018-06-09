@@ -25,7 +25,6 @@ module Coque
     def getio(io, mode = "r")
       case io
       when String
-        puts "opening IO for #{self} #{io}"
         File.open(io, mode)
       when Pathname
         File.open(io, mode)
@@ -43,12 +42,10 @@ module Coque
     end
 
     def stdout=(s)
-      puts "set stdout of #{self} to #{s}"
       @stdout = getio(s, "w")
     end
 
     def stdin=(s)
-      puts "set stdin of #{self} to #{s}"
       @stdin = getio(s, "r")
     end
 

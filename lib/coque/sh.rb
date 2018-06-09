@@ -27,8 +27,6 @@ module Coque
 
     def run
       stdin, stdoutr, stdoutw = get_default_fds
-      puts "Redirect: in: #{stdin}, #{stdin.fileno} => #{stdin.fileno}"
-      puts "redirect: out: #{stdoutw} #{stdoutw.fileno} => #{stdoutw.fileno}"
       opts = {in: stdin, stdin.fileno => stdin.fileno,
               out: stdoutw, stdoutw.fileno => stdoutw.fileno,
               chdir: context.dir, unsetenv_others: context.disinherits_env?}

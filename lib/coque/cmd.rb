@@ -32,15 +32,6 @@ module Coque
                          end
 
       [stdin, stdoutr, stdoutw]
-
-      # if self.stdout.nil?
-        # puts "STDOUT for #{self} is nil, creating"
-        # outr, outw = IO.pipe
-        # self.stdout = outw
-        # puts "set to #{self.stdout}"
-        # only used for Result if this is the last command in a pipe
-      #   @stdout_read = outr
-      # end
     end
   end
 end

@@ -27,7 +27,6 @@ module Coque
     def stitch
       # Set head in
       if commands.first.stdin.nil?
-        puts "NO starting stdin, creating"
         start_r, start_w = IO.pipe
         start_w.close
         commands.first.stdin = start_r
@@ -35,7 +34,6 @@ module Coque
 
       # Connect intermediate in/outs
       commands.each_cons(2) do |left, right|
-        puts "stitch #{left}, #{right}"
         read, write = IO.pipe
         left.stdout = write
         right.stdin = read
@@ -46,7 +44,6 @@ module Coque
         commands.last.stdout = stdout
         stdout
       elsif commands.last.stdout
-        puts "tail command has stdout; re-using #{commands.last.stdout}"
         commands.last.stdout
       else
         next_r, next_w = IO.pipe
