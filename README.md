@@ -39,7 +39,7 @@ pipeline.run.to_a
 
 Coque can also create "Rb" commands, which integrate Ruby code with streaming, line-wise processing of other commands:
 
-```
+```rb
 c1 = Coque["printf", '"a\nb\nc\n"']
 c2 = Coque.rb { |line| puts line.upcase }
 (c1 | c2).run.to_a
@@ -48,7 +48,7 @@ c2 = Coque.rb { |line| puts line.upcase }
 
 Rb commands can also take "pre" and "post" blocks
 
-```
+```rb
 dict = Coque["cat", "/usr/share/dict/words"]
 rb_wc = Coque.rb { @lines += 1 }.pre { @lines = 0 }.post { puts @lines }
 
@@ -90,6 +90,13 @@ Coque["echo", "$my_key"].run.to_a
 
 Coque.context.disinherit_env["echo", "$my_key"].to_a
 # => [""]
+```
+
+Coque also includes a `Coque.source` helper for feeding Ruby enumerables into shell pipelines:
+
+```rb
+(Coque.source(1..500) | Coque["wc", "-l"]).run.to_a
+# => ["500"]
 ```
 
 ### Streaming Performance

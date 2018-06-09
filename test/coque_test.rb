@@ -304,6 +304,14 @@ describe Coque do
     assert_equal "15", (rb_wc < "./test/words.txt").run.first
   end
 
+  it "can use ruby enumerable as Source" do
+    colors = ["red", "green", "purple"]
+    nums = 1..50
+    assert_equal "50", (Coque.source(nums) | Coque["wc", "-l"]).run.first
+    colors = ["red", "green", "purple"]
+    assert_equal ["Red", "gReen", "puRple"], (Coque.source(colors) | Coque["sed", "\"s/r/R/\""]).run.to_a
+  end
+
   # TODO
   # [X] Can partial-apply command args and add more using []
   # [X] Can apply chdir, env, and disinherit_env to Rb forks
@@ -319,5 +327,5 @@ describe Coque do
   # [X] Intro text
   # [ ] Theme image for readme (https://upload.wikimedia.org/wikipedia/commons/3/36/Nyst_1878_-_Cerastoderma_parkinsoni_R-klep.jpg ?)
   # [X] Allow mutliple pipe usages for single command
-  # [ ] Add Coque::Sink to dump RB enumerables into pipelines
+  # [X] Add Coque.source to dump RB enumerables into pipelines
 end
