@@ -225,7 +225,7 @@ describe Coque do
 
     assert_equal ["hi"], echo["hi"].run.to_a
     assert_equal ["ho"], echo["ho"].run.to_a
-    assert_equal ["3"], (echo["ho"] | Coque["wc", "-c"]).run.to_a
+    assert_equal "3", (echo["ho"] | Coque["wc", "-c"]).run.first.lstrip
   end
 
   it "can subsequently redirect a partially-applied command" do
@@ -307,7 +307,7 @@ describe Coque do
   it "can use ruby enumerable as Source" do
     colors = ["red", "green", "purple"]
     nums = 1..50
-    assert_equal "50", (Coque.source(nums) | Coque["wc", "-l"]).run.first
+    assert_equal "50", (Coque.source(nums) | Coque["wc", "-l"]).run.first.lstrip
     colors = ["red", "green", "purple"]
     assert_equal ["Red", "gReen", "puRple"], (Coque.source(colors) | Coque["sed", "\"s/r/R/\""]).run.to_a
   end
