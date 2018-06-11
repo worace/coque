@@ -1,6 +1,7 @@
 require "test_helper"
 
 TMP = `cd /tmp && pwd -P`.chomp
+TEST_FILE = "./test/words.txt"
 
 describe Coque do
   it "tests" do
@@ -59,29 +60,31 @@ describe Coque do
 
   it "can redirect various IO types" do
     c = Coque["echo", "hi"]
+    Dir.mktmpdir("coque_tests") do |dir|
+      path = dir + "/test.txt"
 
-    path = Dir.tmpdir + Time.now.to_f.to_s
+      (c > File.open(path, "w")).run.wait
+      assert_equal ["hi\n"], File.readlines(path).to_a
 
-    (c > File.open(path, "w")).run.wait
-    assert_equal ["hi\n"], File.readlines(path).to_a
+      FileUtils.rm(path)
 
-    FileUtils.rm(path)
+      (c > path).run.wait
+      assert_equal ["hi\n"], File.readlines(path).to_a
 
-    (c > path).run.wait
-    assert_equal ["hi\n"], File.readlines(path).to_a
+      FileUtils.rm(path)
+      (c > Pathname(path)).run.wait
+      assert_equal ["hi\n"], File.readlines(path).to_a
 
-    FileUtils.rm(path)
-    (c > Pathname(path)).run.wait
-    assert_equal ["hi\n"], File.readlines(path).to_a
+      FileUtils.rm(path)
+      (c > File.open(path, "w")).run.wait
+      assert_equal ["hi\n"], File.readlines(path).to_a
 
-    FileUtils.rm(path)
-    (c > File.open(path, "w")).run.wait
-    assert_equal ["hi\n"], File.readlines(path).to_a
-
-    # Raises on unhandled type
-    assert_raises ArgumentError do
-      c > Object.new
+      # Raises on unhandled type
+      assert_raises ArgumentError do
+        c > Object.new
+      end
     end
+
   end
 
   it "can redirect a pipeline stdout" do
@@ -101,12 +104,12 @@ describe Coque do
   end
 
   it "can redirect stdin of command" do
-    res = (Coque["head", "-n", "1"] < "/usr/share/dict/words").run.to_a
-    assert_equal ["A"], res
+    res = (Coque["head", "-n", "1"] < TEST_FILE).run.to_a
+    assert_equal ["acculturation"], res
   end
 
   it "can redirect stdin of pipeline" do
-    res = ((Coque["head", "-n", "5"] < "/usr/share/dict/words") | Coque["wc", "-l"]).run.to_a
+    res = ((Coque["head", "-n", "5"] < TEST_FILE) | Coque["wc", "-l"]).run.to_a
     assert_equal ["5"], res.map(&:lstrip)
   end
 
@@ -117,46 +120,28 @@ describe Coque do
     assert_equal("3\n", File.read(out.path).lstrip)
   end
 
-  it "cannot add command with already-redirected stdin as subsequent step of pipeline" do
-    redirected = (Coque["head", "-n", "5"] < "/usr/share/dict/words")
-    assert_raises(Coque::RedirectionError) do
-      Coque["printf", "1\n2\n3\n4\n5\n"] | redirected
-    end
+  it "Changes stdin of command when including it in pipeline" do
+    lines = Coque["printf", "\"1\n2\n3\n\""]
+    redirected = (Coque["head", "-n", "5"] < TEST_FILE)
 
-    pipeline = (Coque["printf", "1\n2\n3\n"] | Coque["head", "-n", "2"])
-    next_cmd = Coque["wc", "-c"] < "/usr/share/dict/words"
-    assert_raises(Coque::RedirectionError) do
-      pipeline | next_cmd
-    end
+    assert_equal ["acculturation", "balustrades", "bantamweights", "begat", "brisk"], redirected.to_a
+    assert_equal ["1", "2", "3"], (lines | redirected).to_a
   end
 
-  it "raises error on reassignment of std streams" do
-    c = Coque["cat"] < Tempfile.new
-    assert_raises(Coque::RedirectionError) do
-      c.stdin = Tempfile.new
-    end
+  it "Changes stdin of RB command when includign it in pipeline" do
+    lines = Coque["printf", "\"1\n2\n3\n\""]
+    redirected = (Coque.rb { |l| puts l.upcase } < TEST_FILE)
+    assert_equal "ACCULTURATION", redirected.to_a.first
 
-    c = Coque["echo", "hi"] > Tempfile.new
-    assert_raises(Coque::RedirectionError) do
-      c.stdout = Tempfile.new
-    end
-
-    c = Coque["echo", "hi"] >= Tempfile.new
-    assert_raises(Coque::RedirectionError) do
-      c.stderr = Tempfile.new
-    end
+    assert_equal ["1", "2", "3"], (lines | redirected).to_a
   end
 
-  it "cannot pipe stdout-redirected command to subsequent command" do
-    redirected = Coque["echo", "hi"] > Tempfile.new
-    assert_raises(Coque::RedirectionError) do
-      redirected | Coque["wc", "-c"]
-    end
-
-    pipeline = (Coque["printf", "1\n2\n3\n"] | Coque["head", "-n", "2"]) > Tempfile.new
-    assert_raises(Coque::RedirectionError) do
-      pipeline | Coque["wc", "-c"]
-    end
+  it "uses tail command's stdout when including in pipeline" do
+    out = Tempfile.new
+    lines = Coque["printf", "\"1\n2\n3\n\""]
+    redirected = (Coque["head", "-n", "5"] > out)
+    (lines | redirected).run.wait
+    assert_equal "1\n2\n3\n", File.read(out)
   end
 
   it "stores exit code in result" do
@@ -241,6 +226,7 @@ describe Coque do
 
     assert_equal ["hi"], echo["hi"].run.to_a
     assert_equal ["ho"], echo["ho"].run.to_a
+    assert_equal "3", (echo["ho"] | Coque["wc", "-c"]).run.first.lstrip
   end
 
   it "can subsequently redirect a partially-applied command" do
@@ -305,14 +291,26 @@ describe Coque do
     assert_equal "hi\n", File.read(o2)
   end
 
-  it "can re-use a command in multiple pipelines" do
-    skip
+  it "can re-use a command in different pipelines" do
     e = Coque["echo", "hi"]
 
     assert_equal ["3"], (e | Coque["wc", "-c"]).run.to_a.map(&:lstrip)
 
     assert_equal ["h"], (e | Coque["head", "-c", "1"]).run.to_a
+  end
 
+  it "can use pre/post blocks of Rb commands to maintain state" do
+    rb_wc = Coque.rb { @lines += 1 }.pre { @lines = 0 }.post { puts @lines }
+
+    assert_equal "15", (rb_wc < TEST_FILE).run.first
+  end
+
+  it "can use ruby enumerable as Source" do
+    colors = ["red", "green", "purple"]
+    nums = 1..50
+    assert_equal "50", (Coque.source(nums) | Coque["wc", "-l"]).run.first.lstrip
+    colors = ["red", "green", "purple"]
+    assert_equal ["Red", "gReen", "puRple"], (Coque.source(colors) | Coque["sed", "\"s/r/R/\""]).run.to_a
   end
 
   # TODO
@@ -329,5 +327,6 @@ describe Coque do
   # [-] Usage examples in readme
   # [X] Intro text
   # [ ] Theme image for readme (https://upload.wikimedia.org/wikipedia/commons/3/36/Nyst_1878_-_Cerastoderma_parkinsoni_R-klep.jpg ?)
-  # [ ] Allow mutliple pipe usages for single command
+  # [X] Allow mutliple pipe usages for single command
+  # [X] Add Coque.source to dump RB enumerables into pipelines
 end

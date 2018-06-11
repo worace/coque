@@ -16,12 +16,11 @@ module Coque
     end
 
     def |(other)
-      verify_redirectable(other)
       case other
       when Pipeline
         Pipeline.new(commands + other.commands)
       when Cmd
-        Pipeline.new(commands + [other])
+        Pipeline.new(commands + [other.clone])
       end
     end
 

@@ -24,4 +24,8 @@ module Coque
   def self.pipeline(*commands)
     commands.reduce(:|)
   end
+
+  def self.source(enumerable)
+    Coque.rb.post { enumerable.each { |e| puts e} }
+  end
 end

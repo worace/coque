@@ -39,7 +39,7 @@ pipeline.run.to_a
 
 Coque can also create "Rb" commands, which integrate Ruby code with streaming, line-wise processing of other commands:
 
-```
+```rb
 c1 = Coque["printf", '"a\nb\nc\n"']
 c2 = Coque.rb { |line| puts line.upcase }
 (c1 | c2).run.to_a
@@ -48,7 +48,7 @@ c2 = Coque.rb { |line| puts line.upcase }
 
 Rb commands can also take "pre" and "post" blocks
 
-```
+```rb
 dict = Coque["cat", "/usr/share/dict/words"]
 rb_wc = Coque.rb { @lines += 1 }.pre { @lines = 0 }.post { puts @lines }
 
@@ -71,7 +71,7 @@ File.read("/tmp/error.txt")
 # => "cat: /doesntexist.txt: No such file or directory\n"
 ```
 
-Coque commands can also be derived from a `Coque::Context`:
+Coque commands can also be derived from a `Coque::Context`, which enables changing directory, setting environment variables, and unsetting child env:
 
 ```rb
 c = Coque.context
@@ -83,6 +83,20 @@ Coque.context.chdir("/tmp")["pwd"].run.to_a
 
 Coque.context.setenv("my_key": "pizza")["echo", "$my_key"].run.to_a
 # => ["pizza"]
+
+ENV["my_key"] = "pizza"
+Coque["echo", "$my_key"].run.to_a
+# => ["pizza"]
+
+Coque.context.disinherit_env["echo", "$my_key"].to_a
+# => [""]
+```
+
+Coque also includes a `Coque.source` helper for feeding Ruby enumerables into shell pipelines:
+
+```rb
+(Coque.source(1..500) | Coque["wc", "-l"]).run.to_a
+# => ["500"]
 ```
 
 ### Streaming Performance
