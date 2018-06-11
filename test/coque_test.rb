@@ -1,6 +1,7 @@
 require "test_helper"
 
 TMP = `cd /tmp && pwd -P`.chomp
+TEST_FILE = "./test/words.txt"
 
 describe Coque do
   it "tests" do
@@ -103,12 +104,12 @@ describe Coque do
   end
 
   it "can redirect stdin of command" do
-    res = (Coque["head", "-n", "1"] < "/usr/share/dict/words").run.to_a
-    assert_equal ["A"], res
+    res = (Coque["head", "-n", "1"] < TEST_FILE).run.to_a
+    assert_equal ["acculturation"], res
   end
 
   it "can redirect stdin of pipeline" do
-    res = ((Coque["head", "-n", "5"] < "/usr/share/dict/words") | Coque["wc", "-l"]).run.to_a
+    res = ((Coque["head", "-n", "5"] < TEST_FILE) | Coque["wc", "-l"]).run.to_a
     assert_equal ["5"], res.map(&:lstrip)
   end
 
@@ -121,7 +122,7 @@ describe Coque do
 
   it "Changes stdin of command when including it in pipeline" do
     lines = Coque["printf", "\"1\n2\n3\n\""]
-    redirected = (Coque["head", "-n", "5"] < "./test/words.txt")
+    redirected = (Coque["head", "-n", "5"] < TEST_FILE)
 
     assert_equal ["acculturation", "balustrades", "bantamweights", "begat", "brisk"], redirected.to_a
     assert_equal ["1", "2", "3"], (lines | redirected).to_a
@@ -129,7 +130,7 @@ describe Coque do
 
   it "Changes stdin of RB command when includign it in pipeline" do
     lines = Coque["printf", "\"1\n2\n3\n\""]
-    redirected = (Coque.rb { |l| puts l.upcase } < "./test/words.txt")
+    redirected = (Coque.rb { |l| puts l.upcase } < TEST_FILE)
     assert_equal "ACCULTURATION", redirected.to_a.first
 
     assert_equal ["1", "2", "3"], (lines | redirected).to_a
@@ -301,7 +302,7 @@ describe Coque do
   it "can use pre/post blocks of Rb commands to maintain state" do
     rb_wc = Coque.rb { @lines += 1 }.pre { @lines = 0 }.post { puts @lines }
 
-    assert_equal "15", (rb_wc < "./test/words.txt").run.first
+    assert_equal "15", (rb_wc < TEST_FILE).run.first
   end
 
   it "can use ruby enumerable as Source" do
