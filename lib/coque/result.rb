@@ -21,4 +21,9 @@ class Coque::Result
     @exit_code = status.exitstatus
     self
   end
+
+  def success?
+    to_a
+    exit_code == 0
+  end
 end

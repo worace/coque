@@ -4,10 +4,6 @@ TMP = `cd /tmp && pwd -P`.chomp
 TEST_FILE = "./test/words.txt"
 
 describe Coque do
-  it "tests" do
-    assert true
-  end
-
   it "has version" do
     refute_nil ::Coque::VERSION
   end
@@ -311,6 +307,18 @@ describe Coque do
     assert_equal "50", (Coque.source(nums) | Coque["wc", "-l"]).run.first.lstrip
     colors = ["red", "green", "purple"]
     assert_equal ["Red", "gReen", "puRple"], (Coque.source(colors) | Coque["sed", "\"s/r/R/\""]).run.to_a
+  end
+
+  it "exposes success and run methods for results" do
+    echo = Coque["echo", "hi"]
+    res = echo.run
+    assert(res.success?)
+    assert(echo.success?)
+    refute((Coque["ls", "--bad-arg"] >= "/dev/null").success?)
+
+    assert_raises RuntimeError do
+      (Coque["ls", "--bad-arg"] >= "/dev/null").run!
+    end
   end
 
   # TODO

@@ -53,6 +53,16 @@ module Coque
       run.to_a
     end
 
+    def success?
+      run.success?
+    end
+
+    def run!
+      if !success?
+        raise "Coque Command Failed: #{self}"
+      end
+    end
+
     private
 
     def stdout_read
