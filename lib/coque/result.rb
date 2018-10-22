@@ -8,8 +8,15 @@ class Coque::Result
   end
 
   def each(&block)
-    @out.each_line do |line|
-      block.call(line.chomp)
+    begin
+      @out.each_line do |line|
+        block.call(line.chomp)
+      end
+    rescue IOError
+      # If the command was redirected to an existing standard output stream,
+      # i.e. $stdout or $stderr, that output will be streamed as executed, so
+      # attempting to read from it here will fail.
+      # There may be a better way to handle this case, but for now this is working ok.
     end
     unless defined? @exit_code
       wait
@@ -23,7 +30,7 @@ class Coque::Result
   end
 
   def success?
-    to_a
+    wait
     exit_code == 0
   end
 end

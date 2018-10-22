@@ -321,6 +321,20 @@ describe Coque do
     end
   end
 
+  it "can redirect to existing stdout and stderr" do
+    assert((Coque["echo", "stdout"] > STDOUT).success?)
+    assert((Coque["echo", "stderr"] > STDERR).success?)
+    assert((Coque["echo", "stdout"] > $stdout).success?)
+    assert((Coque["echo", "stderr"] > $stderr).success?)
+    assert((Coque["echo", "stdout"] > '/dev/stdout').success?)
+    assert((Coque["echo", "stderr"] > '/dev/stderr').success?)
+  end
+
+  it "gives empty array for output if stdout redirected to STDOUT" do
+    cmd = Coque["echo", "stdout"] > STDOUT
+    assert_equal(cmd.to_a, [])
+  end
+
   # TODO
   # [X] Can partial-apply command args and add more using []
   # [X] Can apply chdir, env, and disinherit_env to Rb forks

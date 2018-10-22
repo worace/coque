@@ -24,6 +24,10 @@ module Coque
 
     def getio(io, mode = "r")
       case io
+      when STDERR
+        io.dup
+      when STDOUT
+        io.dup
       when String
         File.open(io, mode)
       when Pathname
