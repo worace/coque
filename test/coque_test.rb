@@ -335,6 +335,10 @@ describe Coque do
     assert_equal(cmd.to_a, [])
   end
 
+  it "command with lots of output doesn't hang" do
+    (Coque.source(1..20000) | Coque["cat"]).run!
+  end
+
   # TODO
   # [X] Can partial-apply command args and add more using []
   # [X] Can apply chdir, env, and disinherit_env to Rb forks

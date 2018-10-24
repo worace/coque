@@ -30,7 +30,7 @@ class Coque::Result
   end
 
   def success?
-    wait
+    to_a
     exit_code == 0
   end
 end
