@@ -30,7 +30,7 @@ class Coque::Result
   end
 
   def success?
-    to_a
+    count
     exit_code == 0
   end
 end
