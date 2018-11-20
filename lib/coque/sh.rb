@@ -14,7 +14,7 @@ module Coque
     end
 
     def to_s
-      "<Coque::Sh #{args.inspect}>"
+      "<Coque::Sh #{args.join(" ")}>"
     end
 
     def inspect
