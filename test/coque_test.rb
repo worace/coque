@@ -339,6 +339,21 @@ describe Coque do
     (Coque.source(1..20000) | Coque["cat"]).run!
   end
 
+  it "can handle lazy enumerators as source" do
+    rb_head = Coque.rb do |l|
+      @lines << l
+      if @lines.count == 20
+        @lines.each { |l| puts l }
+        STDIN.close
+        exit
+      end
+    end.pre do
+      @lines = []
+    end
+    (Coque.source((1..Float::INFINITY).lazy) | Coque["head"]).run.to_a
+    # (Coque.source((1..Float::INFINITY).lazy) | rb_head).run!
+  end
+
   # TODO
   # [X] Can partial-apply command args and add more using []
   # [X] Can apply chdir, env, and disinherit_env to Rb forks

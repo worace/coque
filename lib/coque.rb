@@ -26,6 +26,24 @@ module Coque
   end
 
   def self.source(enumerable)
-    Coque.rb.post { enumerable.each { |e| puts e} }
+    Coque.rb.post do
+      enumerable = enumerable.to_enum
+      while !STDOUT.closed?
+        begin
+          el = enumerable.next
+          $stderr.puts("source iter #{el}")
+          $stderr.puts(STDOUT.inspect)
+          puts_res = STDOUT.puts(el.to_s)
+          $stderr.puts("wrote el: #{el} -- res: #{puts_res.inspect}")
+          Signal.trap("PIPE", "EXIT")
+        rescue StopIteration
+          $stderr.puts("Rescued stop iter")
+          exit
+        rescue Errno::EPIPE
+          $stderr.puts("broke pipe")
+          exit
+        end
+      end
+    end
   end
 end
