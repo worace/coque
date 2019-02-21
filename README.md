@@ -1,5 +1,7 @@
 # Coque
 
+[![Gem Version](https://badge.fury.io/rb/coque.svg)](https://badge.fury.io/rb/coque)
+
 Create, manage, and interop with shell pipelines from Ruby. Like [Plumbum](https://plumbum.readthedocs.io/en/latest/), for Ruby, with native (Ruby) code streaming integration.
 
 ## Installation
