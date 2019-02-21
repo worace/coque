@@ -99,15 +99,6 @@ Coque also includes a `Coque.source` helper for feeding Ruby enumerables into sh
 # => ["500"]
 ```
 
-#### Logging
-
-You can set a logger for Coque, which will be used to output messages when commands are executed:
-
-```rb
-Coque.logger = Logger.new(STDOUT)
-(Coque["echo", "hi"] | Coque["wc", "-c"]).run!
-```
-
 #### Named (Non-Operator) Method Alternatives
 
 The main piping and redirection methods also include named alternatives:
@@ -123,6 +114,15 @@ So these 2 invocations are equivalent:
 (Coque["echo", "hi"] | Coque["wc", "-c"] > STDERR).run!
 # is the same as...
 Coque["echo", "hi"].pipe(Coque["wc", "-c"]).out(STDERR).run!
+```
+
+#### Logging
+
+You can set a logger for Coque, which will be used to output messages when commands are executed:
+
+```rb
+Coque.logger = Logger.new(STDOUT)
+(Coque["echo", "hi"] | Coque["wc", "-c"]).run!
 ```
 
 Will log:
