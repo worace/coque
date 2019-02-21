@@ -16,13 +16,17 @@ module Coque
       "<Pipeline #{commands.join(" | ")} >"
     end
 
-    def |(other)
+    def pipe(other)
       case other
       when Pipeline
         Pipeline.new(commands + other.commands)
       when Cmd
         Pipeline.new(commands + [other.clone])
       end
+    end
+
+    def |(other)
+      pipe(other)
     end
 
     def stitch

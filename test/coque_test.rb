@@ -356,6 +356,13 @@ describe Coque do
     Coque.logger = nil
   end
 
+  it "allows non-symbol version of redirection commands" do
+    assert_equal "3", Coque["echo", "hi"].pipe(Coque["wc", "-c"]).to_a.first.lstrip
+    assert Coque["echo", "stdout"].out(STDOUT).success?
+    assert Coque["echo", "stderr"].err(STDERR).success?
+    assert_equal "acculturation", Coque["head", "-n", "1"].in(TEST_FILE).to_a.first
+  end
+
   # TODO
   # [X] Can partial-apply command args and add more using []
   # [X] Can apply chdir, env, and disinherit_env to Rb forks

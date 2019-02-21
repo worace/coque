@@ -4,22 +4,34 @@ module Coque
   module Redirectable
     attr_reader :stdin, :stdout, :stderr
 
-    def >(io)
+    def out(io)
       clone.tap do |c|
         c.stdout = io
       end
     end
 
-    def <(io)
+    def >(io)
+      out(io)
+    end
+
+    def in(io)
       clone.tap do |c|
         c.stdin = io
       end
     end
 
-    def >=(io)
+    def <(io)
+      self.in(io)
+    end
+
+    def err(io)
       clone.tap do |c|
         c.stderr = io
       end
+    end
+
+    def >=(io)
+      err(io)
     end
 
     def getio(io, mode = "r")

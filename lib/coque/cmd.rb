@@ -4,13 +4,17 @@ module Coque
     include Runnable
     attr_reader :context
 
-    def |(other)
+    def pipe(other)
       case other
       when Cmd
         Pipeline.new([self.clone, other.clone])
       when Pipeline
         Pipeline.new([self.clone] + other.commands)
       end
+    end
+
+    def |(other)
+      pipe(other)
     end
 
     def clone
