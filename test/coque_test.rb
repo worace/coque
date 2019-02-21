@@ -344,7 +344,6 @@ describe Coque do
   it "logs executions when logger is set" do
     output = StringIO.new
     Coque.logger = Logger.new(output)
-    # rb_wc = Coque.rb { @lines += 1 }.pre { @lines = 0 }.post { puts @lines }
 
     (Coque["echo", "hi"] | Coque["wc", "-c"]).run!
 

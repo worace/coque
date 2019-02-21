@@ -99,6 +99,43 @@ Coque also includes a `Coque.source` helper for feeding Ruby enumerables into sh
 # => ["500"]
 ```
 
+#### Logging
+
+You can set a logger for Coque, which will be used to output messages when commands are executed:
+
+```rb
+Coque.logger = Logger.new(STDOUT)
+(Coque["echo", "hi"] | Coque["wc", "-c"]).run!
+```
+
+#### Named (Non-Operator) Method Alternatives
+
+The main piping and redirection methods also include named alternatives:
+
+* `|` is aliased to `pipe`
+* `>` is aliased to `out`
+* `>=` is aliased to `err`
+* `<` is aliased to `in`
+
+So these 2 invocations are equivalent:
+
+```rb
+(Coque["echo", "hi"] | Coque["wc", "-c"] > STDERR).run!
+# is the same as...
+Coque["echo", "hi"].pipe(Coque["wc", "-c"]).out(STDERR).run!
+```
+
+Will log:
+
+```
+I, [2019-02-20T20:31:00.325777 #16749]  INFO -- : Executing Coque Command: <Pipeline <Coque::Sh echo hi> | <Coque::Sh wc -c> >
+I, [2019-02-20T20:31:00.325971 #16749]  INFO -- : Executing Coque Command: <Coque::Sh echo hi>
+I, [2019-02-20T20:31:00.327719 #16749]  INFO -- : Coque Command: <Coque::Sh echo hi> finished in 0.001683 seconds.
+I, [2019-02-20T20:31:00.327771 #16749]  INFO -- : Executing Coque Command: <Coque::Sh wc -c>
+I, [2019-02-20T20:31:00.329586 #16749]  INFO -- : Coque Command: <Coque::Sh wc -c> finished in 0.001739 seconds.
+I, [2019-02-20T20:31:00.329725 #16749]  INFO -- : Coque Command: <Pipeline <Coque::Sh echo hi> | <Coque::Sh wc -c> > finished in 0.003796 seconds.
+```
+
 ### Streaming Performance
 
 Should be little overhead compared with the equivalent pipeline from a standard shell.
