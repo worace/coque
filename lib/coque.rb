@@ -1,4 +1,5 @@
 require "coque/redirectable"
+require "coque/runnable"
 require "coque/cmd"
 require "coque/sh"
 require "coque/rb"
@@ -9,6 +10,15 @@ require "coque/result"
 require "coque/version"
 
 module Coque
+  @@logger = nil
+  def self.logger=(logger)
+    @@logger = logger
+  end
+
+  def self.logger
+    @@logger
+  end
+
   def self.context(dir: Dir.pwd, env: {}, disinherits_env: false)
     Context.new(dir, env, disinherits_env)
   end

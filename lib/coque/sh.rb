@@ -25,7 +25,7 @@ module Coque
       self.class.new(self.context, self.args + new_args)
     end
 
-    def run
+    def get_result
       stdin, stdoutr, stdoutw = get_default_fds
       opts = {in: stdin, stdin.fileno => stdin.fileno,
               out: stdoutw, stdoutw.fileno => stdoutw.fileno,

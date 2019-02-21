@@ -1,6 +1,7 @@
 module Coque
   class Cmd
     include Redirectable
+    include Runnable
     attr_reader :context
 
     def |(other)

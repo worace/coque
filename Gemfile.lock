@@ -1,7 +1,7 @@
 PATH
   remote: .
   specs:
-    coque (0.5.0)
+    coque (0.6.0)
 
 GEM
   remote: https://rubygems.org/
@@ -33,7 +33,7 @@ PLATFORMS
   ruby
 
 DEPENDENCIES
-  bundler (~> 1.16)
+  bundler (~> 2.0)
   coque!
   minitest (~> 5.11)
   minitest-reporters
@@ -42,4 +42,4 @@ DEPENDENCIES
   simplecov
 
 BUNDLED WITH
-   1.16.2
+   2.0.1

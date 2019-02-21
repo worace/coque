@@ -31,7 +31,7 @@ module Coque
       self
     end
 
-    def run
+    def get_result
       stdin, stdoutr, stdoutw = get_default_fds
 
       pid = fork do

@@ -1,6 +1,7 @@
 module Coque
   class Pipeline
     include Redirectable
+    include Runnable
 
     attr_reader :commands
     def initialize(commands = [])
@@ -52,7 +53,7 @@ module Coque
       end
     end
 
-    def run
+    def get_result
       stdout = stitch
       results = commands.map(&:run)
       Result.new(results.last.pid, stdout)

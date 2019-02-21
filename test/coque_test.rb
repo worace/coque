@@ -1,4 +1,6 @@
 require "test_helper"
+require "logger"
+require "stringio"
 
 TMP = `cd /tmp && pwd -P`.chomp
 TEST_FILE = "./test/words.txt"
@@ -337,6 +339,21 @@ describe Coque do
 
   it "command with lots of output doesn't hang" do
     (Coque.source(1..20000) | Coque["cat"]).run!
+  end
+
+  it "logs executions when logger is set" do
+    output = StringIO.new
+    Coque.logger = Logger.new(output)
+    # rb_wc = Coque.rb { @lines += 1 }.pre { @lines = 0 }.post { puts @lines }
+
+    (Coque["echo", "hi"] | Coque["wc", "-c"]).run!
+
+    assert output.string.match("Executing Coque Command: <Pipeline <Coque::Sh echo hi> | <Coque::Sh wc -c> >")
+    assert output.string.match("Executing Coque Command: <Coque::Sh echo hi>")
+    assert output.string.match("Coque Command: <Coque::Sh echo hi> finished in")
+    assert output.string.match("Coque Command: <Pipeline <Coque::Sh echo hi> | <Coque::Sh wc -c> > finished in")
+
+    Coque.logger = nil
   end
 
   # TODO
