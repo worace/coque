@@ -349,8 +349,7 @@ describe Coque do
 
     assert output.string.match("Executing Coque Command: <Pipeline <Coque::Sh echo hi> | <Coque::Sh wc -c> >")
     assert output.string.match("Executing Coque Command: <Coque::Sh echo hi>")
-    assert output.string.match("Coque Command: <Coque::Sh echo hi> finished in")
-    assert output.string.match("Coque Command: <Pipeline <Coque::Sh echo hi> | <Coque::Sh wc -c> > finished in")
+    assert output.string.match("Executing Coque Command: <Coque::Sh wc -c>")
 
     Coque.logger = nil
   end

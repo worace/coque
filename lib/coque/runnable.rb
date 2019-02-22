@@ -16,17 +16,7 @@ module Coque
 
     def run
       log_start
-      start_time = Time.now
-      result = get_result
-      end_time = Time.now
-      log_end(end_time - start_time)
-      result
-    end
-
-    def log_end(seconds)
-      if Coque.logger
-        Coque.logger.info("Coque Command: #{self.to_s} finished in #{seconds} seconds.")
-      end
+      get_result
     end
 
     def log_start
