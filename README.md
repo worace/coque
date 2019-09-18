@@ -102,6 +102,39 @@ Coque also includes a `Coque.source` helper for feeding Ruby enumerables into sh
 # => ["500"]
 ```
 
+#### Asynchrony and Waiting on Processes
+
+Running a Coque command forks a new process, and by default these processes run asynchronously. Calling `.run` on a Coque command or pipeline returns a `Coque::Result` object which can be used to get the output (`.to_a`) or exit code (`.exit_code`) of the process:
+
+```rb
+result = Coque['echo', 'hi'].run
+# => #<Coque::Result:0x000055da63437838 @out=#<IO:fd 15>, @pid=29236>
+puts "its running in the background..."
+its running in the background...
+result.to_a
+# => ["hi"]
+result.exit_code
+# => 0
+```
+
+However you can also just use `.wait` to block on a process while it runs:
+
+```rb
+result = Coque['echo', 'hi'].run.wait
+# => #<Coque::Result:0x000055da633c98b0 @exit_code=0, @out=#<IO:fd 17>, @pid=29536>
+```
+
+Or, use `.run!` to block on the process _and_ raise an exception if it exits with a non-zero response:
+
+```
+Coque["head", "/usr/share/dict/words"].run!
+# => nil
+Coque["head", "/usr/share/dict/pizza"].run!
+# head: cannot open '/usr/share/dict/pizza' for reading: No such file or directory
+# RuntimeError: Coque Command Failed: <Coque::Sh head /usr/share/dict/pizza>
+from /home/horace/.gem/ruby/2.4.4/gems/coque-0.7.1/lib/coque/runnable.rb:13:in `run!'
+```
+
 #### Named (Non-Operator) Method Alternatives
 
 The main piping and redirection methods also include named alternatives:
