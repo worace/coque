@@ -1,7 +1,16 @@
 module Coque
   module Runnable
     def to_a
-      run!.to_a
+      run.to_a
+    end
+
+    def to_a!
+      res = run
+      rows = res.to_a
+      unless res.exit_code == 0
+        raise "Coque Command Failed: #{self}"
+      end
+      rows
     end
 
     def success?

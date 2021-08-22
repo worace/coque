@@ -24,7 +24,7 @@ class Coque::Result
   end
 
   def wait
-    _, status = Process.waitpid2(pid)
+    _pid, status = Process.waitpid2(pid)
     @exit_code = status.exitstatus
     self
   end

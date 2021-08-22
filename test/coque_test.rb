@@ -126,7 +126,7 @@ describe Coque do
     assert_equal ["1", "2", "3"], (lines | redirected).to_a
   end
 
-  it "Changes stdin of RB command when includign it in pipeline" do
+  it "Changes stdin of RB command when including it in pipeline" do
     lines = Coque["printf", "\"1\n2\n3\n\""]
     redirected = (Coque.rb { |l| puts l.upcase } < TEST_FILE)
     assert_equal "ACCULTURATION", redirected.to_a.first
@@ -359,6 +359,12 @@ describe Coque do
     assert Coque["echo", "stdout"].out(STDOUT).success?
     assert Coque["echo", "stderr"].err(STDERR).success?
     assert_equal "acculturation", Coque["head", "-n", "1"].in(TEST_FILE).to_a.first
+  end
+
+  it "to_a! fails on error" do
+    assert_raises RuntimeError do
+      Coque["cat", "/sgsadg/asgdasdg/asgsagsg/ag"].to_a!
+    end
   end
 
   # TODO
