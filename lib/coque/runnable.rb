@@ -1,7 +1,7 @@
 module Coque
   module Runnable
     def to_a
-      run.to_a
+      run!.to_a
     end
 
     def success?
@@ -11,6 +11,8 @@ module Coque
     def run!
       if !success?
         raise "Coque Command Failed: #{self}"
+      else
+        self
       end
     end
 
