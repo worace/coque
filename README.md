@@ -135,6 +135,18 @@ Coque["head", "/usr/share/dict/pizza"].run!
 from /home/horace/.gem/ruby/2.4.4/gems/coque-0.7.1/lib/coque/runnable.rb:13:in `run!'
 ```
 
+There's also a `to_a!` variant on commands which combines the error handling of `run!` with the array-slurping of stdout:
+
+```
+Coque['head', '-n 1', '/usr/share/dict/words'].to_a!
+=> ["A"]
+
+Coque['head', '-n 1', '/usr/share/dict/asdf'].to_a!
+head: cannot open '/usr/share/dict/asdf' for reading: No such file or directory
+RuntimeError: Coque Command Failed: <Coque::Sh head -n 1 /usr/share/dict/asdf>
+from /code/coque/lib/coque/runnable.rb:11:in `to_a!'
+```
+
 #### Named (Non-Operator) Method Alternatives
 
 The main piping and redirection methods also include named alternatives:
